@@ -40,6 +40,7 @@
     }
     .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
     .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; cursor: pointer; }
+    .toggle + .toggle { border-top: 1px solid var(--border); }
     .toggle input {
       appearance: none; -webkit-appearance: none; flex: none; width: 52px; height: 32px; border-radius: 999px;
       background: var(--border); position: relative; transition: background .15s; margin: 0;
@@ -93,6 +94,7 @@
 
   <section class="card">
     <label class="toggle"><span data-i18n="mini"></span><input type="checkbox" data-setting="mini"></label>
+    <label class="toggle"><span data-i18n="mix"></span><input type="checkbox" data-setting="mix"></label>
   </section>
 
   <div id="results" aria-live="polite"></div>
@@ -107,6 +109,7 @@ const I18N = {
     players: "Anzahl Personen",
     roll: "Auswürfeln",
     mini: "Mini-Erweiterung (Set F, Familien)",
+    mix: "Sets kombinieren (Variante)",
     cards: "Standard-Tierkarten",
     empty: "Wähle die Anzahl Personen und tippe auf „Auswürfeln“.",
   },
@@ -116,6 +119,7 @@ const I18N = {
     players: "Number of players",
     roll: "Randomize",
     mini: "Mini-expansion (F Set, Family)",
+    mix: "Combine sets (variant)",
     cards: "Base Animal Cards",
     empty: "Choose the number of players and tap “Randomize”.",
   },
@@ -161,16 +165,18 @@ function t(key) {
   return v;
 }
 
-const DEFAULTS = { players: 2, mini: false };
+const DEFAULTS = { players: 2, mini: false, mix: false };
 const saved = store.get("lota-settings") || {};
-let settings = { players: saved.players ?? DEFAULTS.players, mini: saved.mini ?? DEFAULTS.mini };
+let settings = Object.fromEntries(Object.keys(DEFAULTS).map(k => [k, saved[k] ?? DEFAULTS[k]]));
 let result = store.get("lota-result"); // { sets: { animalId: "A" } }
 if (!result || !result.sets) result = null;
 
 // ===== 5. Würfeln =====
 function rollAll() {
   const sets = settings.mini ? BASE_SETS.concat(MINI_SETS) : BASE_SETS;
-  result = { sets: Object.fromEntries(ANIMALS.map(a => [a.id, pick(sets)])) };
+  // Standard: ein Set für alle 8 Karten. Variante laut Regel: pro Tier 1 Karte aus einem beliebigen Set.
+  const one = pick(sets);
+  result = { sets: Object.fromEntries(ANIMALS.map(a => [a.id, settings.mix ? pick(sets) : one])) };
   store.set("lota-result", result);
   renderResults();
 }
@@ -192,7 +198,7 @@ function render() {
   document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
   document.querySelectorAll(".seg[data-setting] button").forEach(b =>
     b.setAttribute("aria-pressed", String(Number(b.dataset.value) === settings.players)));
-  document.querySelector("input[data-setting=mini]").checked = settings.mini;
+  document.querySelectorAll("input[data-setting]").forEach(i => { i.checked = settings[i.dataset.setting]; });
   renderResults();
 }
 
@@ -207,10 +213,10 @@ document.querySelector(".seg[data-setting=players]").addEventListener("click", e
   store.set("lota-settings", settings);
   render();
 });
-document.querySelector("input[data-setting=mini]").addEventListener("change", e => {
-  settings.mini = e.target.checked;
+document.querySelectorAll("input[data-setting]").forEach(i => i.addEventListener("change", () => {
+  settings[i.dataset.setting] = i.checked;
   store.set("lota-settings", settings);
-});
+}));
 document.getElementById("roll").addEventListener("click", rollAll);
 
 render();
