@@ -119,8 +119,6 @@
     <h3 data-i18n="nz">Nistzeit</h3>
     <label class="toggle"><span data-i18n="nzSealife"></span><input type="checkbox" data-setting="nzSealife"></label>
     <label class="toggle"><span data-i18n="nzTurtle"></span><input type="checkbox" data-setting="nzTurtle"></label>
-    <h3 data-i18n="miniHead">Mini-Erweiterung</h3>
-    <label class="toggle"><span data-i18n="rare"></span><input type="checkbox" data-setting="rare"></label>
   </section>
 
   <div id="results" aria-live="polite"></div>
@@ -141,8 +139,6 @@ const I18N = {
     nz: "Nistzeit",
     nzTurtle: "Schildkröteninsel-Modul",
     nzSealife: "Neue Riffbewohner",
-    miniHead: "Mini-Erweiterung",
-    rare: "Gefährdete Fische",
     guideHint: "Nach der Riffbewohner-Aufbauhilfe: höchstens A 2 · B 2 · C 3 · D 2 · E 3, mindestens und höchstens 1 × F. Innerhalb eines Buchstabens sowohl Korallen als auch Fische als Bedingung.",
     roll: "Aufbau auswürfeln",
     reroll: "Neu auswürfeln",
@@ -160,15 +156,10 @@ const I18N = {
     eggs34: "Schildkröteneier: große oben, mittlere in der Mitte, kleine unten – je in zufälliger Reihenfolge.",
     shells34: "Wer als Dritte(r) und Vierte(r) am Zug ist, beginnt mit 3 Muscheln statt 2.",
     soloTurtle: "Solo: Beschränkungsmarker 11 neben die obere und 14 neben die untere Reihe legen.",
-    rareTitle: "Gefährdete Fische",
-    rareHint: "Jeweils auf das Feld legen, das die blaue Ökosystemkarte angibt.",
-    person: i => `Person ${i}`,
     setup: "Aufbau-Hinweise",
     solo: "Solomodus: Lege die Feuerfischkarte neben dein Riff.",
     ecoBase: "Ökosystemkarten: 1 orange und 1 blaue wählen.",
     ecoTurtle: "Ökosystemkarten: Mit der Schildkröteninsel nur 1 Karte (orange oder blau) nutzen – erste Partie ohne, für Profis 2.",
-    ecoRare: "Als blaue Ökosystemkarte eine Karte der Gefährdeten Fische (10–12) wählen.",
-    rareEnd: "Gefährdete Fische: Die Partie endet erst, wenn nur noch 3 leere Felder im Riff sind.",
   },
   en: {
     docTitle: "Shallow Sea – Randomizer",
@@ -180,8 +171,6 @@ const I18N = {
     nz: "Nesting Season",
     nzTurtle: "Turtle Island Module",
     nzSealife: "New Sealife Tiles",
-    miniHead: "Mini-expansion",
-    rare: "Rare Fish",
     guideHint: "Following the Sealife Tiles Setup Guide: at most A 2 · B 2 · C 3 · D 2 · E 3, at least and at most 1 × F. Within a class, mix tiles requiring Coral Tiles and tiles requiring Fish.",
     roll: "Randomize setup",
     reroll: "Randomize again",
@@ -199,15 +188,10 @@ const I18N = {
     eggs34: "Turtle Eggs: Large on top, Medium in the middle, Small at the bottom – each in random order.",
     shells34: "The 3rd and 4th players start with 3 Seashells instead of 2.",
     soloTurtle: "Solo: place the 11-Tile Restriction Marker next to the top row and the 14-Tile marker next to the bottom row.",
-    rareTitle: "Rare Fish",
-    rareHint: "Place it on the space shown on the blue Ecosystem Card.",
-    person: i => `Player ${i}`,
     setup: "Setup notes",
     solo: "Solo mode: place the Lionfish Card next to your Ocean.",
     ecoBase: "Ecosystem Cards: select 1 Orange and 1 Blue card.",
     ecoTurtle: "Ecosystem Cards: with Turtle Island use only 1 card (Orange or Blue) – none in your first game, 2 for seasoned players.",
-    ecoRare: "Use one of the Rare Fish cards (10–12) as the Blue Ecosystem Card.",
-    rareEnd: "Rare Fish: the game ends when each Ocean has 3 empty spaces remaining.",
   },
 };
 
@@ -295,14 +279,6 @@ const NEST = {
 };
 const NEST_PREFIX = { de: { y: "G", w: "W", b: "B" }, en: { y: "Y", w: "W", b: "B" } };
 
-// Gefährdete Fische (4 Figuren, jede Person bekommt eine eigene)
-const RARE_FISH = [
-  { id: "whale", de: "Walhai", en: "Whale Shark" },
-  { id: "hammer", de: "Hammerhai", en: "Hammerhead Shark" },
-  { id: "saw", de: "Sägerochen", en: "Sawfish" },
-  { id: "wrasse", de: "Napoleon-Lippfisch", en: "Maori Wrasse" },
-];
-
 // ===== 3. Zufall =====
 function randInt(n) {
   // gleichverteilte Zahl 0..n-1 per crypto, mit Rejection gegen Modulo-Bias
@@ -343,7 +319,7 @@ function t(key, ...args) {
 }
 const label = o => o[lang] || o.de;
 
-const DEFAULTS = { players: 2, nzTurtle: false, nzSealife: false, rare: false };
+const DEFAULTS = { players: 2, nzTurtle: false, nzSealife: false };
 const SETTING_KEYS = Object.keys(DEFAULTS);
 let settings = Object.assign({}, DEFAULTS, store.get("riffwelten-settings") || {});
 // nur bekannte Schlüssel behalten (ältere Versionen hatten mehr Optionen)
@@ -391,10 +367,6 @@ function rollSealife(cfg) {
   }
 }
 
-function rollRare(cfg) {
-  return cfg.rare ? shuffle(RARE_FISH).slice(0, cfg.players).map(f => f.id) : null;
-}
-
 function rollNest(cfg) {
   if (!cfg.nzTurtle) return null;
   return { y: pick(NEST.y).n, w: pick(NEST.w).n, b: pick(NEST.b).n };
@@ -402,7 +374,7 @@ function rollNest(cfg) {
 
 function rollAll() {
   const cfg = Object.assign({}, settings);
-  result = { cfg, sealife: rollSealife(cfg), rare: rollRare(cfg), nest: rollNest(cfg) };
+  result = { cfg, sealife: rollSealife(cfg), nest: rollNest(cfg) };
   store.set("riffwelten-result", result);
   render();
   document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -412,7 +384,6 @@ function rerollSection(section) {
   if (!result) return;
   const cfg = result.cfg;
   if (section === "sealife") result.sealife = rollSealife(cfg);
-  if (section === "rare") result.rare = rollRare(cfg);
   if (section === "nest") result.nest = rollNest(cfg);
   store.set("riffwelten-result", result);
   renderResults();
@@ -442,13 +413,6 @@ function renderResults() {
     Object.keys(GUIDE_MAX).map(l => `<span>${l} ${(groups[l] || []).length}/${GUIDE_MAX[l]}</span>`).join("") +
     `</p><p class="hint">${t("guideHint")}</p></section>`;
 
-  // Gefährdete Fische
-  if (result.rare) {
-    html += `<section class="card">${head(t("rareTitle"), "rare")}<ul class="list">` +
-      result.rare.map((id, i) => `<li><span class="code">${i + 1}</span><span class="name">${t("person", i + 1)}: ${label(RARE_FISH.find(f => f.id === id))}</span></li>`).join("") +
-      `</ul><p class="hint">${t("rareHint")}</p></section>`;
-  }
-
   // Schildkröteninsel
   if (result.nest) {
     const p = NEST_PREFIX[lang];
@@ -466,7 +430,6 @@ function renderResults() {
     out ? t("fishOut", out, out * 4) : t("fishAll"),
     cfg.nzTurtle ? t("ecoTurtle") : t("ecoBase"),
   ];
-  if (cfg.rare) notes.push(t("ecoRare"), t("rareEnd"));
   if (cfg.players === 1) notes.push(t("solo"));
   if (cfg.nzTurtle) {
     notes.push(t("nestSide", cfg.players));
