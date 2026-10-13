@@ -5,5 +5,6 @@ Kleine, handyoptimierte Zufallshelfer für den Spielaufbau von Brettspielen (Deu
 ## Randomizer
 
 - **Riffwelten / Shallow Sea** – Riffbewohner nach der Aufbauhilfe, Nistzeit (neue Riffbewohner, Schildkröteninsel) und Aufbau-Hinweise.
+- **Life of the Amazonia** – Standard-Tierkarten pro Tier aus Set A–D (optional F) und Tierfiguren pro Karte.
 
 Gehostet über GitHub Pages: https://dagoon84.github.io/BGrando/

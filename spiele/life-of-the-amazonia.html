@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2e7d32">
+  <title>Life of the Amazonia – Randomizer</title>
+  <style>
+    :root {
+      --bg: #f3f7f1; --card: #ffffff; --fg: #142014; --muted: #5d6b5a; --border: #d9e3d4;
+      --accent: #2e7d32; --accent-fg: #ffffff; --accent-soft: #dcefd9; --hot: #d9701a;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d140c; --card: #172216; --fg: #e6efe3; --muted: #9aab95; --border: #2a3b27;
+        --accent: #6cc070; --accent-fg: #0a1a0b; --accent-soft: #1f3a20; --hot: #ff9d4a;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+               max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    }
+    main { max-width: 640px; margin: 0 auto; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    header a { color: var(--accent); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+    .lang { display: flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--card); }
+    .lang button { min-width: 48px; min-height: 44px; border: 0; background: none; color: var(--muted); font: inherit; font-weight: 600; }
+    .lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+    h1 { font-size: 1.75rem; margin: 8px 0 16px; line-height: 1.2; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+    .card h2 { font-size: 1.05rem; margin: 0 0 10px; }
+    .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+    .seg button {
+      min-height: 52px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg);
+      color: var(--fg); font: inherit; font-size: 1.25rem; font-weight: 700;
+    }
+    .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+    .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; cursor: pointer; }
+    .toggle input {
+      appearance: none; -webkit-appearance: none; flex: none; width: 52px; height: 32px; border-radius: 999px;
+      background: var(--border); position: relative; transition: background .15s; margin: 0;
+    }
+    .toggle input::after {
+      content: ""; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%;
+      background: #fff; transition: transform .15s; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+    .toggle input:checked { background: var(--accent); }
+    .toggle input:checked::after { transform: translateX(20px); }
+    .roll {
+      display: block; width: 100%; margin: 12px 0 0; min-height: 60px; border: 0; border-radius: 16px;
+      background: var(--hot); color: #fff; font: inherit; font-size: 1.2rem; font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+    .roll:active { transform: scale(.98); }
+    .empty { color: var(--muted); text-align: center; padding: 20px 8px; }
+    ul.list { list-style: none; margin: 0; padding: 0; }
+    ul.list li { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); }
+    ul.list li:first-child { border-top: 0; }
+    .set {
+      flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px;
+      background: var(--accent); color: var(--accent-fg); font-size: 1.4rem; font-weight: 800;
+    }
+    .name { flex: 1; font-size: 1.1rem; font-weight: 600; min-width: 0; }
+    .qty { flex: none; font-weight: 800; font-size: 1.1rem; color: var(--hot); font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <a href="../index.html" data-i18n="back">← Übersicht</a>
+    <div class="lang" role="group" aria-label="Sprache / Language">
+      <button type="button" data-lang="de">DE</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <h1>Life of the Amazonia</h1>
+
+  <section class="card">
+    <h2 data-i18n="players">Anzahl Personen</h2>
+    <div class="seg" data-setting="players">
+      <button type="button" data-value="1">1</button>
+      <button type="button" data-value="2">2</button>
+      <button type="button" data-value="3">3</button>
+      <button type="button" data-value="4">4</button>
+    </div>
+    <button class="roll" id="roll" type="button" data-i18n="roll">Auswürfeln</button>
+  </section>
+
+  <section class="card">
+    <label class="toggle"><span data-i18n="mini"></span><input type="checkbox" data-setting="mini"></label>
+  </section>
+
+  <div id="results" aria-live="polite"></div>
+</main>
+
+<script>
+// ===== 1. Übersetzungen =====
+const I18N = {
+  de: {
+    docTitle: "Life of the Amazonia – Randomizer",
+    back: "← Übersicht",
+    players: "Anzahl Personen",
+    roll: "Auswürfeln",
+    mini: "Mini-Erweiterung (Set F, Familien)",
+    cards: "Standard-Tierkarten",
+    empty: "Wähle die Anzahl Personen und tippe auf „Auswürfeln“.",
+  },
+  en: {
+    docTitle: "Life of the Amazonia – Randomizer",
+    back: "← Overview",
+    players: "Number of players",
+    roll: "Randomize",
+    mini: "Mini-expansion (F Set, Family)",
+    cards: "Base Animal Cards",
+    empty: "Choose the number of players and tap “Randomize”.",
+  },
+};
+
+// ===== 2. Spieldaten =====
+// Die 8 Standard-Tiere; pro Tier gibt es eine Karte je Set (A–D, Mini-Erweiterung: F).
+// meeples: Tierfiguren pro Karte für 1–2 / 3 / 4 Personen (Tabelle im Spielaufbau)
+const ANIMALS = [
+  { id: "woodpecker", de: "Specht", en: "Woodpecker", meeples: [6, 9, 12] },
+  { id: "frog", de: "Laubfrosch", en: "Leaf Frog", meeples: [6, 9, 12] },
+  { id: "tamarin", de: "Tamarin", en: "Tamarin", meeples: [4, 6, 8] },
+  { id: "toucan", de: "Tukan", en: "Toucan", meeples: [4, 6, 8] },
+  { id: "macaw", de: "Ara", en: "Macaw", meeples: [4, 5, 6] },
+  { id: "caiman", de: "Kaiman", en: "Caiman", meeples: [4, 5, 6] },
+  { id: "otter", de: "Riesenotter", en: "Otter", meeples: [3, 4, 5] },
+  { id: "jaguar", de: "Jaguar", en: "Jaguar", meeples: [3, 4, 5] },
+];
+const BASE_SETS = ["A", "B", "C", "D"];
+const MINI_SETS = ["F"]; // Set E (Blanko-Karten) bleibt bewusst draußen
+const meeplesFor = (a, players) => a.meeples[players <= 2 ? 0 : players - 2];
+
+// ===== 3. Zufall =====
+function randInt(n) {
+  const max = Math.floor(0x100000000 / n) * n;
+  const buf = new Uint32Array(1);
+  do { crypto.getRandomValues(buf); } while (buf[0] >= max);
+  return buf[0] % n;
+}
+const pick = arr => arr[randInt(arr.length)];
+
+// ===== 4. Sprache & Einstellungen =====
+const store = {
+  get(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
+  set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} },
+};
+let lang = store.get("lang");
+if (lang !== "de" && lang !== "en") lang = (navigator.language || "de").toLowerCase().startsWith("de") ? "de" : "en";
+
+function t(key) {
+  const v = I18N[lang][key];
+  if (v === undefined) { console.warn("i18n: fehlender Schlüssel", lang, key); return I18N.de[key] ?? key; }
+  return v;
+}
+
+const DEFAULTS = { players: 2, mini: false };
+const saved = store.get("lota-settings") || {};
+let settings = { players: saved.players ?? DEFAULTS.players, mini: saved.mini ?? DEFAULTS.mini };
+let result = store.get("lota-result"); // { sets: { animalId: "A" } }
+if (!result || !result.sets) result = null;
+
+// ===== 5. Würfeln =====
+function rollAll() {
+  const sets = settings.mini ? BASE_SETS.concat(MINI_SETS) : BASE_SETS;
+  result = { sets: Object.fromEntries(ANIMALS.map(a => [a.id, pick(sets)])) };
+  store.set("lota-result", result);
+  renderResults();
+}
+
+// ===== 6. Rendern =====
+function renderResults() {
+  const el = document.getElementById("results");
+  if (!result) { el.innerHTML = `<div class="card empty">${t("empty")}</div>`; return; }
+  el.innerHTML = `<section class="card"><h2>${t("cards")}</h2><ul class="list">` +
+    ANIMALS.map(a => `<li><span class="set">${result.sets[a.id]}</span><span class="name">${a[lang]}</span>` +
+      `<span class="qty">${meeplesFor(a, settings.players)}×</span></li>`).join("") +
+    `</ul></section>`;
+}
+
+function render() {
+  document.documentElement.lang = lang;
+  document.title = t("docTitle");
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+  document.querySelectorAll(".seg[data-setting] button").forEach(b =>
+    b.setAttribute("aria-pressed", String(Number(b.dataset.value) === settings.players)));
+  document.querySelector("input[data-setting=mini]").checked = settings.mini;
+  renderResults();
+}
+
+// ===== 7. Events =====
+document.querySelectorAll(".lang button").forEach(b => b.addEventListener("click", () => {
+  lang = b.dataset.lang; store.set("lang", lang); render();
+}));
+document.querySelector(".seg[data-setting=players]").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  settings.players = Number(b.dataset.value);
+  store.set("lota-settings", settings);
+  render();
+});
+document.querySelector("input[data-setting=mini]").addEventListener("change", e => {
+  settings.mini = e.target.checked;
+  store.set("lota-settings", settings);
+});
+document.getElementById("roll").addEventListener("click", rollAll);
+
+render();
+</script>
+</body>
+</html>
