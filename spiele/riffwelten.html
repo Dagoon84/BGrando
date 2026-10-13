@@ -150,15 +150,11 @@ const I18N = {
     fishAll: "Fische: alle 96 Fische kommen in den Fischbeutel.",
     typeC: "Korallen", typeF: "Fische", typeM: "Korallen + Fische",
     nest: "Schildkröteninsel",
-    nestSide: n => `Schildkröteninsel mit der Seite für ${n <= 2 ? "1–2" : "3–4"} Personen nach oben.`,
-    eggs12: "Schildkröteneier: 3 große (obere Reihe) und 3 kleine (untere Reihe) je zufällig, mittlere zurück in die Schachtel.",
-    eggs34: "Schildkröteneier: große oben, mittlere in der Mitte, kleine unten – je in zufälliger Reihenfolge.",
     shells34: "Wer als Dritte(r) und Vierte(r) am Zug ist, beginnt mit 3 Muscheln statt 2.",
     soloTurtle: "Solo: Beschränkungsmarker 11 neben die obere und 14 neben die untere Reihe legen.",
     setup: "Aufbau-Hinweise",
     solo: "Solomodus: Lege die Feuerfischkarte neben dein Riff.",
     ecoBase: "Ökosystemkarten: 1 orange und 1 blaue wählen.",
-    ecoTurtle: "Ökosystemkarten: Mit der Schildkröteninsel nur 1 Karte (orange oder blau) nutzen – erste Partie ohne, für Profis 2.",
   },
   en: {
     docTitle: "Shallow Sea – Randomizer",
@@ -180,15 +176,11 @@ const I18N = {
     fishAll: "Fish: all 96 Fish go into the Fish Pouch.",
     typeC: "Coral", typeF: "Fish", typeM: "Coral + Fish",
     nest: "Turtle Island",
-    nestSide: n => `Turtle Island Board with the ${n <= 2 ? "1–2" : "3–4"} player side face-up.`,
-    eggs12: "Turtle Eggs: 3 random Large Eggs (top row) and 3 random Small Eggs (bottom row); return the Medium Eggs to the box.",
-    eggs34: "Turtle Eggs: Large on top, Medium in the middle, Small at the bottom – each in random order.",
     shells34: "The 3rd and 4th players start with 3 Seashells instead of 2.",
     soloTurtle: "Solo: place the 11-Tile Restriction Marker next to the top row and the 14-Tile marker next to the bottom row.",
     setup: "Setup notes",
     solo: "Solo mode: place the Lionfish Card next to your Ocean.",
     ecoBase: "Ecosystem Cards: select 1 Orange and 1 Blue card.",
-    ecoTurtle: "Ecosystem Cards: with Turtle Island use only 1 card (Orange or Blue) – none in your first game, 2 for seasoned players.",
   },
 };
 
@@ -424,12 +416,10 @@ function renderResults() {
   const out = FISH_BOX - FISH_IN_BAG[cfg.players];
   const notes = [
     out ? t("fishOut", out) : t("fishAll"),
-    cfg.nzTurtle ? t("ecoTurtle") : t("ecoBase"),
   ];
+  if (!cfg.nzTurtle) notes.push(t("ecoBase"));
   if (cfg.players === 1) notes.push(t("solo"));
   if (cfg.nzTurtle) {
-    notes.push(t("nestSide", cfg.players));
-    notes.push(cfg.players <= 2 ? t("eggs12") : t("eggs34"));
     if (cfg.players >= 3) notes.push(t("shells34"));
     if (cfg.players === 1) notes.push(t("soloTurtle"));
   }
