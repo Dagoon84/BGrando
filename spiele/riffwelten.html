@@ -78,6 +78,7 @@
       flex: none; min-width: 48px; text-align: center; font-weight: 800; font-size: 1.05rem; padding: 4px 8px;
       border-radius: 8px; background: var(--accent-soft); color: var(--fg); font-variant-numeric: tabular-nums;
     }
+    .qty { flex: none; font-weight: 800; font-size: 1.05rem; color: var(--coral); min-width: 28px; text-align: right; font-variant-numeric: tabular-nums; }
     .name { flex: 1; font-size: 1.05rem; font-weight: 600; min-width: 0; }
     .tag { flex: none; font-size: .75rem; padding: 2px 8px; border-radius: 999px; color: var(--fg); }
     .tag.c { background: var(--t-coral); } .tag.f { background: var(--t-fish); } .tag.m { background: var(--t-mix); }
@@ -139,15 +140,13 @@ const I18N = {
     nz: "Nistzeit",
     nzTurtle: "Schildkröteninsel-Modul",
     nzSealife: "Neue Riffbewohner",
-    guideHint: "Nach der Riffbewohner-Aufbauhilfe: höchstens A 2 · B 2 · C 3 · D 2 · E 3, mindestens und höchstens 1 × F. Innerhalb eines Buchstabens sowohl Korallen als auch Fische als Bedingung.",
     roll: "Aufbau auswürfeln",
     reroll: "Neu auswürfeln",
     rerollShort: "↻ Neu",
     empty: "Wähle die Anzahl Personen und eure Erweiterungen und tippe auf „Aufbau auswürfeln“.",
     changed: "Die Einstellungen wurden geändert – tippe auf „Neu auswürfeln“, um sie zu übernehmen.",
     sealife: "Riffbewohner",
-    sealifeBag: (per, total) => `In den Riffbewohnerbeutel: je ${per} Plättchen (insgesamt ${total}).`,
-    fishOut: (per, total) => `Fische aussortieren: je ${per} pro Farbe (insgesamt ${total}) zurück in die Schachtel.`,
+    fishOut: per => `Fische aussortieren: je ${per} pro Farbe.`,
     fishAll: "Fische: alle 96 Fische kommen in den Fischbeutel.",
     typeC: "Korallen", typeF: "Fische", typeM: "Korallen + Fische",
     nest: "Schildkröteninsel",
@@ -171,15 +170,13 @@ const I18N = {
     nz: "Nesting Season",
     nzTurtle: "Turtle Island Module",
     nzSealife: "New Sealife Tiles",
-    guideHint: "Following the Sealife Tiles Setup Guide: at most A 2 · B 2 · C 3 · D 2 · E 3, at least and at most 1 × F. Within a class, mix tiles requiring Coral Tiles and tiles requiring Fish.",
     roll: "Randomize setup",
     reroll: "Randomize again",
     rerollShort: "↻ New",
     empty: "Choose the number of players and your expansions, then tap “Randomize setup”.",
     changed: "Settings have changed – tap “Randomize again” to apply them.",
     sealife: "Sealife Tiles",
-    sealifeBag: (per, total) => `Into the Sealife Pouch: ${per} of each (${total} total).`,
-    fishOut: (per, total) => `Remove Fish: ${per} of each color (${total} total) back to the box.`,
+    fishOut: per => `Remove Fish: ${per} of each color.`,
     fishAll: "Fish: all 96 Fish go into the Fish Pouch.",
     typeC: "Coral", typeF: "Fish", typeM: "Coral + Fish",
     nest: "Turtle Island",
@@ -407,11 +404,11 @@ function renderResults() {
   const groups = countByLetter(items);
   const per = SEALIFE_PER[cfg.players];
   html += `<section class="card">${head(t("sealife"), "sealife")}<ul class="list">` +
-    items.map(s => `<li><span class="code">${s.id}</span><span class="name">${label(s)}</span>` +
+    items.map(s => `<li><span class="qty">${per}×</span><span class="code">${s.id}</span><span class="name">${label(s)}</span>` +
       `<span class="tag ${s.t}">${t("type" + s.t.toUpperCase())}</span></li>`).join("") +
     `</ul><p class="counts">` +
     Object.keys(GUIDE_MAX).map(l => `<span>${l} ${(groups[l] || []).length}/${GUIDE_MAX[l]}</span>`).join("") +
-    `</p><p class="hint">${t("guideHint")}</p></section>`;
+    `</p></section>`;
 
   // Schildkröteninsel
   if (result.nest) {
@@ -426,8 +423,7 @@ function renderResults() {
   // Aufbau-Hinweise
   const out = FISH_BOX - FISH_IN_BAG[cfg.players];
   const notes = [
-    t("sealifeBag", per, per * SEALIFE_TOTAL),
-    out ? t("fishOut", out, out * 4) : t("fishAll"),
+    out ? t("fishOut", out) : t("fishAll"),
     cfg.nzTurtle ? t("ecoTurtle") : t("ecoBase"),
   ];
   if (cfg.players === 1) notes.push(t("solo"));
