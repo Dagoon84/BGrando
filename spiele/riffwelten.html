@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e7c86">
+  <title>Riffwelten – Randomizer</title>
+  <style>
+    :root {
+      --bg: #f2f7fa; --card: #ffffff; --fg: #10202e; --muted: #5a6b7a; --border: #d6e1e9;
+      --accent: #0e7c86; --accent-fg: #ffffff; --accent-soft: #d9f0f1;
+      --coral: #d9573b; --orange: #d9701a; --blue: #2a68cf; --warn-bg: #fff4d6; --warn-fg: #6b4e00;
+      --t-coral: #f6ddd6; --t-fish: #d8e6fb; --t-mix: #e6e0f6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0a141c; --card: #13212d; --fg: #e5edf3; --muted: #93a5b4; --border: #24384a;
+        --accent: #3bbfc8; --accent-fg: #062026; --accent-soft: #143a40;
+        --coral: #ff8a6b; --orange: #ff9d4a; --blue: #6f9dff; --warn-bg: #3a3014; --warn-fg: #f3d98b;
+        --t-coral: #4a2a22; --t-fish: #1f3352; --t-mix: #33294d;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+               calc(104px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    }
+    main { max-width: 640px; margin: 0 auto; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    header a { color: var(--accent); text-decoration: none; padding: 10px 0; min-height: 44px; display: inline-flex; align-items: center; }
+    .lang { display: flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--card); }
+    .lang button { min-width: 48px; min-height: 44px; border: 0; background: none; color: var(--muted); font: inherit; font-weight: 600; }
+    .lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+    h1 { font-size: 1.75rem; margin: 8px 0 0; line-height: 1.2; }
+    .sub { color: var(--muted); margin: 2px 0 16px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+    .card h2 { font-size: 1.05rem; margin: 0 0 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .card h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 4px; }
+    .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; }
+    .seg button {
+      min-height: 52px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg);
+      color: var(--fg); font: inherit; font-size: 1.25rem; font-weight: 700;
+    }
+    .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+    .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 4px 0; cursor: pointer; }
+    .toggle + .toggle { border-top: 1px solid var(--border); }
+    .toggle input {
+      appearance: none; -webkit-appearance: none; flex: none; width: 52px; height: 32px; border-radius: 999px;
+      background: var(--border); position: relative; transition: background .15s; margin: 0;
+    }
+    .toggle input::after {
+      content: ""; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%;
+      background: #fff; transition: transform .15s; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+    .toggle input:checked { background: var(--accent); }
+    .toggle input:checked::after { transform: translateX(20px); }
+    .hint { color: var(--muted); font-size: .875rem; margin: 6px 0 0; }
+    .hidden { display: none !important; }
+    .roll-bar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+      padding: 12px max(16px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+      background: linear-gradient(to top, var(--bg) 70%, transparent);
+    }
+    .roll {
+      display: block; width: 100%; max-width: 640px; margin: 0 auto; min-height: 60px; border: 0; border-radius: 16px;
+      background: var(--coral); color: #fff; font: inherit; font-size: 1.2rem; font-weight: 700;
+      box-shadow: 0 6px 18px rgba(0,0,0,.18);
+    }
+    .roll:active { transform: scale(.98); }
+    .mini {
+      min-height: 40px; min-width: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px;
+      background: var(--bg); color: var(--accent); font: inherit; font-size: .9rem; font-weight: 600; flex: none;
+    }
+    .notice { background: var(--warn-bg); color: var(--warn-fg); border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; font-size: .9rem; }
+    .empty { color: var(--muted); text-align: center; padding: 20px 8px; }
+    ul.list { list-style: none; margin: 0; padding: 0; }
+    ul.list li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); }
+    ul.list li:first-child { border-top: 0; }
+    .code {
+      flex: none; min-width: 48px; text-align: center; font-weight: 800; font-size: 1.05rem; padding: 4px 8px;
+      border-radius: 8px; background: var(--accent-soft); color: var(--fg); font-variant-numeric: tabular-nums;
+    }
+    .name { flex: 1; font-size: 1.05rem; font-weight: 600; min-width: 0; }
+    .tag { flex: none; font-size: .75rem; padding: 2px 8px; border-radius: 999px; color: var(--fg); }
+    .tag.c { background: var(--t-coral); } .tag.f { background: var(--t-fish); } .tag.m { background: var(--t-mix); }
+    .code.nest-y { background: #e8c21c; color: #1d1700; } .code.nest-w { background: #f4f4f4; color: #1d1d1d; border: 1px solid #ccc; }
+    .code.nest-b { background: var(--blue); color: #fff; }
+    .counts { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+    .counts span { font-size: .85rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: var(--accent-soft); font-variant-numeric: tabular-nums; }
+    .info { margin: 10px 0 0; padding-left: 20px; }
+    .info li { margin: 4px 0; }
+    @media (min-width: 600px) { h1 { font-size: 2.1rem; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <a href="../index.html" data-i18n="back">← Übersicht</a>
+    <div class="lang" role="group" aria-label="Sprache / Language">
+      <button type="button" data-lang="de">DE</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <h1 data-i18n="title">Riffwelten</h1>
+  <p class="sub" data-i18n="subtitle">Randomizer für den Spielaufbau</p>
+
+  <section class="card">
+    <h2 data-i18n="players">Anzahl Personen</h2>
+    <div class="seg" data-setting="players">
+      <button type="button" data-value="1">1</button>
+      <button type="button" data-value="2">2</button>
+      <button type="button" data-value="3">3</button>
+      <button type="button" data-value="4">4</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 data-i18n="expansions">Erweiterungen</h2>
+    <h3 data-i18n="nz">Nistzeit</h3>
+    <label class="toggle"><span data-i18n="nzSealife"></span><input type="checkbox" data-setting="nzSealife"></label>
+    <label class="toggle"><span data-i18n="nzTurtle"></span><input type="checkbox" data-setting="nzTurtle"></label>
+    <h3 data-i18n="miniHead">Mini-Erweiterung</h3>
+    <label class="toggle"><span data-i18n="rare"></span><input type="checkbox" data-setting="rare"></label>
+  </section>
+
+  <div id="results" aria-live="polite"></div>
+</main>
+
+<div class="roll-bar"><button class="roll" id="roll" type="button"></button></div>
+
+<script>
+// ===== 1. Übersetzungen =====
+// Begriffe aus den offiziellen Regeln: DE „Riffwelten“ (Strohmann Games), EN „Shallow Sea“ (Bad Comet).
+const I18N = {
+  de: {
+    docTitle: "Riffwelten – Randomizer",
+    back: "← Übersicht",
+    title: "Riffwelten",
+    subtitle: "Randomizer für den Spielaufbau",
+    players: "Anzahl Personen",
+    expansions: "Erweiterungen",
+    nz: "Nistzeit",
+    nzTurtle: "Schildkröteninsel-Modul",
+    nzSealife: "Neue Riffbewohner",
+    miniHead: "Mini-Erweiterung",
+    rare: "Gefährdete Fische",
+    guideHint: "Nach der Riffbewohner-Aufbauhilfe: höchstens A 2 · B 2 · C 3 · D 2 · E 3, mindestens und höchstens 1 × F. Innerhalb eines Buchstabens sowohl Korallen als auch Fische als Bedingung.",
+    roll: "Aufbau auswürfeln",
+    reroll: "Neu auswürfeln",
+    rerollShort: "↻ Neu",
+    empty: "Wähle die Anzahl Personen und eure Erweiterungen und tippe auf „Aufbau auswürfeln“.",
+    changed: "Die Einstellungen wurden geändert – tippe auf „Neu auswürfeln“, um sie zu übernehmen.",
+    sealife: "Riffbewohner",
+    sealifeBag: (per, total) => `In den Riffbewohnerbeutel: je ${per} Plättchen (insgesamt ${total}).`,
+    fishOut: (per, total) => `Fische aussortieren: je ${per} pro Farbe (insgesamt ${total}) zurück in die Schachtel.`,
+    fishAll: "Fische: alle 96 Fische kommen in den Fischbeutel.",
+    typeC: "Korallen", typeF: "Fische", typeM: "Korallen + Fische",
+    nest: "Schildkröteninsel",
+    nestSide: n => `Schildkröteninsel mit der Seite für ${n <= 2 ? "1–2" : "3–4"} Personen nach oben.`,
+    eggs12: "Schildkröteneier: 3 große (obere Reihe) und 3 kleine (untere Reihe) je zufällig, mittlere zurück in die Schachtel.",
+    eggs34: "Schildkröteneier: große oben, mittlere in der Mitte, kleine unten – je in zufälliger Reihenfolge.",
+    shells34: "Wer als Dritte(r) und Vierte(r) am Zug ist, beginnt mit 3 Muscheln statt 2.",
+    soloTurtle: "Solo: Beschränkungsmarker 11 neben die obere und 14 neben die untere Reihe legen.",
+    rareTitle: "Gefährdete Fische",
+    rareHint: "Jeweils auf das Feld legen, das die blaue Ökosystemkarte angibt.",
+    person: i => `Person ${i}`,
+    setup: "Aufbau-Hinweise",
+    solo: "Solomodus: Lege die Feuerfischkarte neben dein Riff.",
+    ecoBase: "Ökosystemkarten: 1 orange und 1 blaue wählen.",
+    ecoTurtle: "Ökosystemkarten: Mit der Schildkröteninsel nur 1 Karte (orange oder blau) nutzen – erste Partie ohne, für Profis 2.",
+    ecoRare: "Als blaue Ökosystemkarte eine Karte der Gefährdeten Fische (10–12) wählen.",
+    rareEnd: "Gefährdete Fische: Die Partie endet erst, wenn nur noch 3 leere Felder im Riff sind.",
+  },
+  en: {
+    docTitle: "Shallow Sea – Randomizer",
+    back: "← Overview",
+    title: "Shallow Sea",
+    subtitle: "Setup randomizer",
+    players: "Number of players",
+    expansions: "Expansions",
+    nz: "Nesting Season",
+    nzTurtle: "Turtle Island Module",
+    nzSealife: "New Sealife Tiles",
+    miniHead: "Mini-expansion",
+    rare: "Rare Fish",
+    guideHint: "Following the Sealife Tiles Setup Guide: at most A 2 · B 2 · C 3 · D 2 · E 3, at least and at most 1 × F. Within a class, mix tiles requiring Coral Tiles and tiles requiring Fish.",
+    roll: "Randomize setup",
+    reroll: "Randomize again",
+    rerollShort: "↻ New",
+    empty: "Choose the number of players and your expansions, then tap “Randomize setup”.",
+    changed: "Settings have changed – tap “Randomize again” to apply them.",
+    sealife: "Sealife Tiles",
+    sealifeBag: (per, total) => `Into the Sealife Pouch: ${per} of each (${total} total).`,
+    fishOut: (per, total) => `Remove Fish: ${per} of each color (${total} total) back to the box.`,
+    fishAll: "Fish: all 96 Fish go into the Fish Pouch.",
+    typeC: "Coral", typeF: "Fish", typeM: "Coral + Fish",
+    nest: "Turtle Island",
+    nestSide: n => `Turtle Island Board with the ${n <= 2 ? "1–2" : "3–4"} player side face-up.`,
+    eggs12: "Turtle Eggs: 3 random Large Eggs (top row) and 3 random Small Eggs (bottom row); return the Medium Eggs to the box.",
+    eggs34: "Turtle Eggs: Large on top, Medium in the middle, Small at the bottom – each in random order.",
+    shells34: "The 3rd and 4th players start with 3 Seashells instead of 2.",
+    soloTurtle: "Solo: place the 11-Tile Restriction Marker next to the top row and the 14-Tile marker next to the bottom row.",
+    rareTitle: "Rare Fish",
+    rareHint: "Place it on the space shown on the blue Ecosystem Card.",
+    person: i => `Player ${i}`,
+    setup: "Setup notes",
+    solo: "Solo mode: place the Lionfish Card next to your Ocean.",
+    ecoBase: "Ecosystem Cards: select 1 Orange and 1 Blue card.",
+    ecoTurtle: "Ecosystem Cards: with Turtle Island use only 1 card (Orange or Blue) – none in your first game, 2 for seasoned players.",
+    ecoRare: "Use one of the Rare Fish cards (10–12) as the Blue Ecosystem Card.",
+    rareEnd: "Rare Fish: the game ends when each Ocean has 3 empty spaces remaining.",
+  },
+};
+
+// ===== 2. Spieldaten =====
+// Riffbewohner: t = Bedingungsart (c = Korallen, f = Fische, m = beides), set = base | nz (Nistzeit)
+const SEALIFE = [
+  { id: "A1", t: "c", set: "base", de: "Walhai", en: "Whale Shark" },
+  { id: "A2", t: "c", set: "base", de: "Weißer Hai", en: "Great White Shark" },
+  { id: "A3", t: "f", set: "base", de: "Epaulettenhai", en: "Epaulette Shark" },
+  { id: "A4", t: "f", set: "base", de: "Hammerhai", en: "Hammerhead Shark" },
+  { id: "A5", t: "m", set: "nz", de: "Sägerochen", en: "Sawfish" },
+  { id: "A6", t: "m", set: "nz", de: "Teppichhai", en: "Wobbegong" },
+  { id: "B1", t: "c", set: "base", de: "Dugong", en: "Dugong" },
+  { id: "B2", t: "f", set: "base", de: "Großer Tümmler", en: "Common Bottlenose Dolphin" },
+  { id: "B3", t: "c", set: "base", de: "Buckelwal", en: "Humpback Whale" },
+  { id: "B4", t: "f", set: "base", de: "Migaloo", en: "Migaloo" },
+  { id: "B5", t: "c", set: "nz", de: "Orca (Killerwal)", en: "Orca (Killer Whale)" },
+  { id: "B6", t: "f", set: "nz", de: "Südafrikanischer Seebär", en: "Brown Fur Seal" },
+  { id: "B7", t: "c", set: "nz", de: "Gemeiner Delfin", en: "Common Dolphin" },
+  { id: "B8", t: "f", set: "nz", de: "Rundkopfdelfin", en: "Risso's Dolphin" },
+  { id: "C1", t: "c", set: "base", de: "Riffmanta", en: "Reef Manta Ray" },
+  { id: "C2", t: "c", set: "base", de: "Echte Karettschildkröte", en: "Hawksbill Sea Turtle" },
+  { id: "C3", t: "c", set: "base", de: "Nattern-Plattschwanz", en: "Yellow-lipped Sea Krait" },
+  { id: "C4", t: "f", set: "base", de: "Dorniges Seepferdchen", en: "Spiny Seahorse" },
+  { id: "C5", t: "f", set: "nz", de: "Blaupunktrochen", en: "Bluespotted Ribbontail Ray" },
+  { id: "C6", t: "f", set: "nz", de: "Plättchenseeschlange", en: "Yellow-bellied Sea Snake" },
+  { id: "C7", t: "m", set: "nz", de: "Seedrache", en: "Common Seadragon" },
+  { id: "C8", t: "m", set: "nz", de: "Geisterpfeifenfisch", en: "Ghost Pipefish" },
+  { id: "D1", t: "c", set: "base", de: "Boxerkrabbe", en: "Pom-pom Crab" },
+  { id: "D2", t: "c", set: "base", de: "Einsiedlerkrebs", en: "Hermit Crab" },
+  { id: "D3", t: "f", set: "base", de: "Riffhummer", en: "Reef Lobster" },
+  { id: "D4", t: "f", set: "base", de: "Fangschreckenkrebs", en: "Mantis Shrimp" },
+  { id: "D5", t: "m", set: "nz", de: "Gehörnte Geisterkrabbe", en: "Horned Ghost Crab" },
+  { id: "D6", t: "m", set: "nz", de: "Asselspinne", en: "Sea Spider" },
+  { id: "E1", t: "c", set: "base", de: "Blaugeringelter Krake", en: "Greater Blue-ringed Octopus" },
+  { id: "E2", t: "c", set: "base", de: "Sepia", en: "Cuttlefish" },
+  { id: "E3", t: "f", set: "base", de: "Annas Prachtstern", en: "Anna's Magnificent Sea Slug" },
+  { id: "E4", t: "f", set: "base", de: "Würfelqualle", en: "Box Jellyfish" },
+  { id: "E5", t: "m", set: "nz", de: "Löcherkrake", en: "Blanket Octopus" },
+  { id: "E6", t: "m", set: "nz", de: "Mimik-Oktopus", en: "Mimic Octopus" },
+  { id: "E7", t: "m", set: "nz", de: "Schirmqualle", en: "Scyphozoa" },
+  { id: "E8", t: "m", set: "nz", de: "Blaue Ozeanschnecke", en: "Blue Sea Dragon" },
+  { id: "E9", t: "c", set: "nz", de: "Jorunna parva", en: "Sea Bunny" },
+  { id: "E10", t: "f", set: "nz", de: "Kreuzqualle", en: "Jelly Blubber" },
+  { id: "F1", t: "c", set: "base", de: "Perlboot", en: "Nautilus" },
+  { id: "F2", t: "c", set: "base", de: "Riesenmuschel", en: "Giant Clam" },
+  { id: "F3", t: "f", set: "nz", de: "Leucht-Feilenmuschel", en: "Electric Flame Scallop" },
+  { id: "F4", t: "f", set: "nz", de: "Meeresschnecke", en: "Sea Snail" },
+];
+
+// Riffbewohner-Aufbauhilfe: Höchstanzahl pro Buchstabe, F genau 1, insgesamt 10
+const GUIDE_MAX = { A: 2, B: 2, C: 3, D: 2, E: 3, F: 1 };
+const SEALIFE_TOTAL = 10;
+
+// Riffbewohner im Beutel je Plättchen-Typ: 1–2 P. → 2, 3 P. → 3, 4 P. → 4
+const SEALIFE_PER = { 1: 2, 2: 2, 3: 3, 4: 4 };
+// Fische: 24 pro Farbe in der Schachtel; im Beutel 1 P. → 9, 2 P. → 14, 3 P. → 19, 4 P. → 24 je Farbe.
+// Angezeigt wird, wie viele pro Farbe aussortiert werden.
+const FISH_BOX = 24;
+const FISH_IN_BAG = { 1: 9, 2: 14, 3: 19, 4: 24 };
+
+// Nestplättchen der Schildkröteninsel; Gelb heißt im Deutschen G.., im Englischen Y..
+const NEST = {
+  y: [
+    { n: 1, de: "5 Korallen gleicher Farbe abschließen", en: "Complete 5 Coral Tiles of the same color" },
+    { n: 2, de: "5 Fische gleicher Farbe abschließen", en: "Complete 5 Fish of the same color" },
+    { n: 3, de: "3 Korallen gleicher Farbe mit unterschiedlichen SP abschließen", en: "Complete 3 same-color Coral Tiles with different VP values" },
+    { n: 4, de: "4 angrenzende Korallen in einer diagonalen Reihe abschließen", en: "Complete 4 adjacent Coral Tiles along a diagonal line" },
+    { n: 5, de: "4 Korallen mit 4 Fischen gleicher Farbe abschließen", en: "Complete 4 Fish-Coral combinations with all 4 Fish of the same color" },
+  ],
+  w: [
+    { n: 1, de: "4 Korallen unterschiedlicher Farbe abschließen", en: "Complete 4 Coral Tiles of different colors" },
+    { n: 2, de: "4 Fische unterschiedlicher Farbe abschließen", en: "Complete 4 Fish of different colors" },
+    { n: 3, de: "4 Korallen und 4 Fische unterschiedlicher Farbe abschließen", en: "Complete 4 Coral Tiles and 4 Fish of different colors" },
+    { n: 4, de: "Fische gleicher Farbe auf 3 Korallen unterschiedlicher Farbe abschließen", en: "Complete Fish of the same color on 3 Coral Tiles of different colors" },
+    { n: 5, de: "Je 2 Korallen in 3 unterschiedlichen Farben abschließen", en: "Complete 2 Coral Tiles for each of 3 different colors" },
+  ],
+  b: [
+    { n: 1, de: "3 unterschiedliche Riffbewohner abschließen", en: "Complete 3 different Sealife Tiles" },
+    { n: 2, de: "4 Riffbewohner abschließen (auch gleiche)", en: "Complete 4 Sealife Tiles (identical ones count)" },
+    { n: 3, de: "Je 1 Riffbewohner in oberster und unterster Reihe abschließen", en: "Complete 1 Sealife Tile on both the top and bottom rows" },
+    { n: 4, de: "3 angrenzende Riffbewohner abschließen", en: "Complete 3 adjacent Sealife Tiles" },
+    { n: 5, de: "3 Riffbewohner in einer horizontalen Reihe abschließen", en: "Complete 3 Sealife Tiles in a single horizontal row" },
+  ],
+};
+const NEST_PREFIX = { de: { y: "G", w: "W", b: "B" }, en: { y: "Y", w: "W", b: "B" } };
+
+// Gefährdete Fische (4 Figuren, jede Person bekommt eine eigene)
+const RARE_FISH = [
+  { id: "whale", de: "Walhai", en: "Whale Shark" },
+  { id: "hammer", de: "Hammerhai", en: "Hammerhead Shark" },
+  { id: "saw", de: "Sägerochen", en: "Sawfish" },
+  { id: "wrasse", de: "Napoleon-Lippfisch", en: "Maori Wrasse" },
+];
+
+// ===== 3. Zufall =====
+function randInt(n) {
+  // gleichverteilte Zahl 0..n-1 per crypto, mit Rejection gegen Modulo-Bias
+  const max = Math.floor(0x100000000 / n) * n;
+  const buf = new Uint32Array(1);
+  do { crypto.getRandomValues(buf); } while (buf[0] >= max);
+  return buf[0] % n;
+}
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = randInt(i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+const pick = arr => arr[randInt(arr.length)];
+
+// ===== 4. Sprache & Einstellungen =====
+const store = {
+  get(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
+  set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} },
+};
+function detectLang() {
+  const saved = store.get("lang");
+  if (saved === "de" || saved === "en") return saved;
+  return (navigator.language || "de").toLowerCase().startsWith("de") ? "de" : "en";
+}
+let lang = detectLang();
+
+function t(key, ...args) {
+  let v = I18N[lang][key];
+  if (v === undefined) {
+    console.warn("i18n: fehlender Schlüssel", lang, key);
+    v = I18N.de[key];
+  }
+  return typeof v === "function" ? v(...args) : (v ?? key);
+}
+const label = o => o[lang] || o.de;
+
+const DEFAULTS = { players: 2, nzTurtle: false, nzSealife: false, rare: false };
+const SETTING_KEYS = Object.keys(DEFAULTS);
+let settings = Object.assign({}, DEFAULTS, store.get("riffwelten-settings") || {});
+// nur bekannte Schlüssel behalten (ältere Versionen hatten mehr Optionen)
+settings = Object.fromEntries(SETTING_KEYS.map(k => [k, settings[k]]));
+let result = store.get("riffwelten-result");
+if (!result || !result.cfg || !Array.isArray(result.sealife)) result = null;
+else result.cfg = Object.fromEntries(SETTING_KEYS.map(k => [k, result.cfg[k] ?? DEFAULTS[k]]));
+
+// ===== 5. Würfeln =====
+function sealifePool(cfg) {
+  return SEALIFE.filter(s => s.set === "base" || (s.set === "nz" && cfg.nzSealife));
+}
+const letterOf = s => s.id[0];
+
+function countByLetter(sel) {
+  const groups = {};
+  sel.forEach(s => (groups[letterOf(s)] ||= []).push(s));
+  return groups;
+}
+
+// Riffbewohner-Aufbauhilfe (letzte Seite der Regeln):
+// höchstens GUIDE_MAX pro Buchstabe, F mindestens und höchstens 1,
+// bei 2+ Riffbewohnern eines Buchstabens müssen Korallen UND Fische als Bedingung vorkommen.
+function guideOk(sel) {
+  const groups = countByLetter(sel);
+  for (const [letter, list] of Object.entries(groups)) {
+    if (list.length > GUIDE_MAX[letter]) return false;
+    if (list.length >= 2) {
+      const coral = list.some(s => s.t !== "f");
+      const fish = list.some(s => s.t !== "c");
+      if (!coral || !fish) return false;
+    }
+  }
+  return (groups.F || []).length === 1;
+}
+
+function rollSealife(cfg) {
+  const pool = sealifePool(cfg);
+  const fTiles = pool.filter(s => letterOf(s) === "F");
+  const rest = pool.filter(s => letterOf(s) !== "F");
+  // Rejection Sampling: zufällige Auswahl, bis die Aufbauhilfe erfüllt ist (gleichverteilt über gültige Sets)
+  for (;;) {
+    const sel = [pick(fTiles), ...shuffle(rest).slice(0, SEALIFE_TOTAL - 1)];
+    if (guideOk(sel)) return sel.map(s => s.id);
+  }
+}
+
+function rollRare(cfg) {
+  return cfg.rare ? shuffle(RARE_FISH).slice(0, cfg.players).map(f => f.id) : null;
+}
+
+function rollNest(cfg) {
+  if (!cfg.nzTurtle) return null;
+  return { y: pick(NEST.y).n, w: pick(NEST.w).n, b: pick(NEST.b).n };
+}
+
+function rollAll() {
+  const cfg = Object.assign({}, settings);
+  result = { cfg, sealife: rollSealife(cfg), rare: rollRare(cfg), nest: rollNest(cfg) };
+  store.set("riffwelten-result", result);
+  render();
+  document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function rerollSection(section) {
+  if (!result) return;
+  const cfg = result.cfg;
+  if (section === "sealife") result.sealife = rollSealife(cfg);
+  if (section === "rare") result.rare = rollRare(cfg);
+  if (section === "nest") result.nest = rollNest(cfg);
+  store.set("riffwelten-result", result);
+  renderResults();
+}
+
+// ===== 6. Rendern =====
+const sortIds = (a, b) => a[0].localeCompare(b[0]) || parseInt(a.slice(1)) - parseInt(b.slice(1));
+const head = (title, section) =>
+  `<h2><span>${title}</span>${section ? `<button class="mini" type="button" data-reroll="${section}">${t("rerollShort")}</button>` : ""}</h2>`;
+
+function renderResults() {
+  const el = document.getElementById("results");
+  if (!result) { el.innerHTML = `<div class="card empty">${t("empty")}</div>`; return; }
+  const cfg = result.cfg;
+  let html = "";
+
+  if (JSON.stringify(cfg) !== JSON.stringify(settings)) html += `<div class="notice">${t("changed")}</div>`;
+
+  // Riffbewohner
+  const items = result.sealife.slice().sort(sortIds).map(id => SEALIFE.find(s => s.id === id));
+  const groups = countByLetter(items);
+  const per = SEALIFE_PER[cfg.players];
+  html += `<section class="card">${head(t("sealife"), "sealife")}<ul class="list">` +
+    items.map(s => `<li><span class="code">${s.id}</span><span class="name">${label(s)}</span>` +
+      `<span class="tag ${s.t}">${t("type" + s.t.toUpperCase())}</span></li>`).join("") +
+    `</ul><p class="counts">` +
+    Object.keys(GUIDE_MAX).map(l => `<span>${l} ${(groups[l] || []).length}/${GUIDE_MAX[l]}</span>`).join("") +
+    `</p><p class="hint">${t("guideHint")}</p></section>`;
+
+  // Gefährdete Fische
+  if (result.rare) {
+    html += `<section class="card">${head(t("rareTitle"), "rare")}<ul class="list">` +
+      result.rare.map((id, i) => `<li><span class="code">${i + 1}</span><span class="name">${t("person", i + 1)}: ${label(RARE_FISH.find(f => f.id === id))}</span></li>`).join("") +
+      `</ul><p class="hint">${t("rareHint")}</p></section>`;
+  }
+
+  // Schildkröteninsel
+  if (result.nest) {
+    const p = NEST_PREFIX[lang];
+    html += `<section class="card">${head(t("nest"), "nest")}<ul class="list">` +
+      ["y", "w", "b"].map(c => {
+        const n = NEST[c].find(x => x.n === result.nest[c]);
+        return `<li><span class="code nest-${c}">${p[c]}0${n.n}</span><span class="name">${label(n)}</span></li>`;
+      }).join("") + `</ul></section>`;
+  }
+
+  // Aufbau-Hinweise
+  const out = FISH_BOX - FISH_IN_BAG[cfg.players];
+  const notes = [
+    t("sealifeBag", per, per * SEALIFE_TOTAL),
+    out ? t("fishOut", out, out * 4) : t("fishAll"),
+    cfg.nzTurtle ? t("ecoTurtle") : t("ecoBase"),
+  ];
+  if (cfg.rare) notes.push(t("ecoRare"), t("rareEnd"));
+  if (cfg.players === 1) notes.push(t("solo"));
+  if (cfg.nzTurtle) {
+    notes.push(t("nestSide", cfg.players));
+    notes.push(cfg.players <= 2 ? t("eggs12") : t("eggs34"));
+    if (cfg.players >= 3) notes.push(t("shells34"));
+    if (cfg.players === 1) notes.push(t("soloTurtle"));
+  }
+  html += `<section class="card">${head(t("setup"))}<ul class="info">${notes.map(n => `<li>${n}</li>`).join("")}</ul></section>`;
+
+  el.innerHTML = html;
+}
+
+function renderSettings() {
+  document.querySelectorAll(".seg[data-setting]").forEach(seg => {
+    seg.querySelectorAll("button").forEach(b =>
+      b.setAttribute("aria-pressed", String(Number(b.dataset.value) === settings[seg.dataset.setting])));
+  });
+  document.querySelectorAll("input[data-setting]").forEach(i => { i.checked = !!settings[i.dataset.setting]; });
+}
+
+function renderTexts() {
+  document.documentElement.lang = lang;
+  document.title = t("docTitle");
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+  document.getElementById("roll").textContent = result ? t("reroll") : t("roll");
+}
+
+function render() { renderTexts(); renderSettings(); renderResults(); }
+
+// ===== 7. Events =====
+document.querySelectorAll(".lang button").forEach(b => b.addEventListener("click", () => {
+  lang = b.dataset.lang;
+  store.set("lang", lang);
+  render();
+}));
+document.querySelectorAll(".seg[data-setting]").forEach(seg => seg.addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  settings[seg.dataset.setting] = Number(b.dataset.value);
+  store.set("riffwelten-settings", settings);
+  renderSettings(); renderResults();
+}));
+document.querySelectorAll("input[data-setting]").forEach(i => i.addEventListener("change", () => {
+  settings[i.dataset.setting] = i.checked;
+  store.set("riffwelten-settings", settings);
+  renderSettings(); renderResults();
+}));
+document.getElementById("results").addEventListener("click", e => {
+  const b = e.target.closest("[data-reroll]");
+  if (b) rerollSection(b.dataset.reroll);
+});
+document.getElementById("roll").addEventListener("click", rollAll);
+
+render();
+</script>
+</body>
+</html>

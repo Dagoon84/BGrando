@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e7c86">
+  <title>Brettspiel-Randomizer</title>
+  <style>
+    :root { --bg: #f2f7fa; --card: #ffffff; --fg: #10202e; --muted: #5a6b7a; --border: #d6e1e9; --accent: #0e7c86; --accent-fg: #ffffff; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0a141c; --card: #13212d; --fg: #e5edf3; --muted: #93a5b4; --border: #24384a; --accent: #3bbfc8; --accent-fg: #062026; }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+               max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    }
+    main { max-width: 640px; margin: 0 auto; }
+    header { display: flex; justify-content: flex-end; }
+    .lang { display: flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--card); }
+    .lang button { min-width: 48px; min-height: 44px; border: 0; background: none; color: var(--muted); font: inherit; font-weight: 600; }
+    .lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+    h1 { font-size: 1.75rem; margin: 8px 0 4px; line-height: 1.2; }
+    .sub { color: var(--muted); margin: 0 0 20px; }
+    .games { display: grid; gap: 12px; }
+    .game {
+      display: flex; align-items: center; gap: 14px; min-height: 72px; padding: 14px 16px;
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px; color: var(--fg); text-decoration: none;
+    }
+    .game:active { transform: scale(.99); }
+    .icon { font-size: 2rem; flex: none; }
+    .game strong { display: block; font-size: 1.1rem; }
+    .game span { color: var(--muted); font-size: .9rem; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="lang" role="group" aria-label="Sprache / Language">
+      <button type="button" data-lang="de">DE</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+  <h1 data-i18n="title">Brettspiel-Randomizer</h1>
+  <p class="sub" data-i18n="subtitle">Zufallshelfer für den Spielaufbau</p>
+  <nav class="games" id="games"></nav>
+</main>
+<script>
+const I18N = {
+  de: { docTitle: "Brettspiel-Randomizer", title: "Brettspiel-Randomizer", subtitle: "Zufallshelfer für den Spielaufbau" },
+  en: { docTitle: "Board Game Randomizers", title: "Board Game Randomizers", subtitle: "Random helpers for game setup" },
+};
+
+// Neue Randomizer hier eintragen
+const GAMES = [
+  { href: "spiele/riffwelten.html", icon: "🐠",
+    de: { name: "Riffwelten", desc: "Riffbewohner, Ökosystemkarten, Nistzeit & Gefährdete Fische" },
+    en: { name: "Shallow Sea", desc: "Sealife Tiles, Ecosystem Cards, Nesting Season & Rare Fish" } },
+];
+
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+let lang = store.get("lang");
+if (lang !== "de" && lang !== "en") lang = (navigator.language || "de").toLowerCase().startsWith("de") ? "de" : "en";
+
+function t(key) {
+  const v = I18N[lang][key];
+  if (v === undefined) { console.warn("i18n: fehlender Schlüssel", lang, key); return I18N.de[key] ?? key; }
+  return v;
+}
+
+function render() {
+  document.documentElement.lang = lang;
+  document.title = t("docTitle");
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+  document.getElementById("games").innerHTML = GAMES.map(g => {
+    const x = g[lang] || g.de;
+    return `<a class="game" href="${g.href}"><span class="icon" aria-hidden="true">${g.icon}</span>` +
+      `<div><strong>${x.name}</strong><span>${x.desc}</span></div></a>`;
+  }).join("");
+}
+
+document.querySelectorAll(".lang button").forEach(b => b.addEventListener("click", () => {
+  lang = b.dataset.lang; store.set("lang", lang); render();
+}));
+render();
+</script>
+</body>
+</html>
