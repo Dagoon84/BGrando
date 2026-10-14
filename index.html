@@ -61,6 +61,10 @@ const GAMES = [
   { href: "spiele/life-of-the-amazonia.html", icon: "🐆",
     de: { name: "Life of the Amazonia", desc: "Standard-Tierkarten A–D (+ F) und Tierfiguren pro Karte" },
     en: { name: "Life of the Amazonia", desc: "Base Animal Cards A–D (+ F) and meeples per card" } },
+  // Externer Link (öffnet in neuem Tab)
+  { href: "https://seti-solarsystem.czechgames.com/", icon: "🪐", external: true,
+    de: { name: "SETI", desc: "Sonnensystem-App von Czech Games" },
+    en: { name: "SETI", desc: "Solar System app by Czech Games" } },
 ];
 
 const store = {
@@ -83,8 +87,9 @@ function render() {
   document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
   document.getElementById("games").innerHTML = GAMES.map(g => {
     const x = g[lang] || g.de;
-    return `<a class="game" href="${g.href}"><span class="icon" aria-hidden="true">${g.icon}</span>` +
-      `<div><strong>${x.name}</strong><span>${x.desc}</span></div></a>`;
+    const ext = g.external ? ` target="_blank" rel="noopener"` : "";
+    return `<a class="game" href="${g.href}"${ext}><span class="icon" aria-hidden="true">${g.icon}</span>` +
+      `<div><strong>${x.name}${g.external ? " ↗" : ""}</strong><span>${x.desc}</span></div></a>`;
   }).join("");
 }
 
