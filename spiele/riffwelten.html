@@ -141,7 +141,6 @@ const I18N = {
     nzTurtle: "Schildkröteninsel-Modul",
     nzSealife: "Neue Riffbewohner",
     roll: "🎲 Zufall",
-    rerollShort: "↻ Neu",
     empty: "Wähle die Anzahl Personen und eure Erweiterungen und tippe auf „Zufall“.",
     changed: "Die Einstellungen wurden geändert – tippe auf „Zufall“, um sie zu übernehmen.",
     sealife: "Riffbewohner",
@@ -166,7 +165,6 @@ const I18N = {
     nzTurtle: "Turtle Island Module",
     nzSealife: "New Sealife Tiles",
     roll: "🎲 Random",
-    rerollShort: "↻ New",
     empty: "Choose the number of players and your expansions, then tap “Random”.",
     changed: "Settings have changed – tap “Random” to apply them.",
     sealife: "Sealife Tiles",
@@ -367,19 +365,11 @@ function rollAll() {
   document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function rerollSection(section) {
-  if (!result) return;
-  const cfg = result.cfg;
-  if (section === "sealife") result.sealife = rollSealife(cfg);
-  if (section === "nest") result.nest = rollNest(cfg);
-  store.set("riffwelten-result", result);
-  renderResults();
-}
-
 // ===== 6. Rendern =====
 const sortIds = (a, b) => a[0].localeCompare(b[0]) || parseInt(a.slice(1)) - parseInt(b.slice(1));
-const head = (title, section) =>
-  `<h2><span>${title}</span>${section ? `<button class="mini" type="button" data-reroll="${section}">${t("rerollShort")}</button>` : ""}</h2>`;
+// Kleiner Knopf an den Ergebnis-Abschnitten: würfelt alles neu, wie der große Knopf
+const head = (title, withRoll) =>
+  `<h2><span>${title}</span>${withRoll ? `<button class="mini" type="button" data-roll>${t("roll")}</button>` : ""}</h2>`;
 
 function renderResults() {
   const el = document.getElementById("results");
@@ -393,7 +383,7 @@ function renderResults() {
   const items = result.sealife.slice().sort(sortIds).map(id => SEALIFE.find(s => s.id === id));
   const groups = countByLetter(items);
   const per = SEALIFE_PER[cfg.players];
-  html += `<section class="card">${head(t("sealife"), "sealife")}<ul class="list">` +
+  html += `<section class="card">${head(t("sealife"), true)}<ul class="list">` +
     items.map(s => `<li><span class="qty">${per}×</span><span class="code">${s.id}</span><span class="name">${label(s)}</span>` +
       `<span class="tag ${s.t}">${t("type" + s.t.toUpperCase())}</span></li>`).join("") +
     `</ul><p class="counts">` +
@@ -403,7 +393,7 @@ function renderResults() {
   // Schildkröteninsel
   if (result.nest) {
     const p = NEST_PREFIX[lang];
-    html += `<section class="card">${head(t("nest"), "nest")}<ul class="list">` +
+    html += `<section class="card">${head(t("nest"), true)}<ul class="list">` +
       ["y", "w", "b"].map(c => {
         const n = NEST[c].find(x => x.n === result.nest[c]);
         return `<li><span class="code nest-${c}">${p[c]}0${n.n}</span><span class="name">${label(n)}</span></li>`;
@@ -463,8 +453,7 @@ document.querySelectorAll("input[data-setting]").forEach(i => i.addEventListener
   renderSettings(); renderResults();
 }));
 document.getElementById("results").addEventListener("click", e => {
-  const b = e.target.closest("[data-reroll]");
-  if (b) rerollSection(b.dataset.reroll);
+  if (e.target.closest("[data-roll]")) rollAll();
 });
 document.getElementById("roll").addEventListener("click", rollAll);
 
