@@ -9,14 +9,14 @@
     :root {
       --bg: #f2f7fa; --card: #ffffff; --fg: #10202e; --muted: #5a6b7a; --border: #d6e1e9;
       --accent: #0e7c86; --accent-fg: #ffffff; --accent-soft: #d9f0f1;
-      --coral: #d9573b; --orange: #d9701a; --blue: #2a68cf; --warn-bg: #fff4d6; --warn-fg: #6b4e00;
+      --coral: #d9573b; --orange: #d9701a; --blue: #2a68cf;
       --t-coral: #f6ddd6; --t-fish: #d8e6fb; --t-mix: #e6e0f6;
     }
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #0a141c; --card: #13212d; --fg: #e5edf3; --muted: #93a5b4; --border: #24384a;
         --accent: #3bbfc8; --accent-fg: #062026; --accent-soft: #143a40;
-        --coral: #ff8a6b; --orange: #ff9d4a; --blue: #6f9dff; --warn-bg: #3a3014; --warn-fg: #f3d98b;
+        --coral: #ff8a6b; --orange: #ff9d4a; --blue: #6f9dff;
         --t-coral: #4a2a22; --t-fish: #1f3352; --t-mix: #33294d;
       }
     }
@@ -69,7 +69,6 @@
       min-height: 40px; min-width: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px;
       background: var(--bg); color: var(--accent); font: inherit; font-size: .9rem; font-weight: 600; flex: none;
     }
-    .notice { background: var(--warn-bg); color: var(--warn-fg); border-radius: 12px; padding: 10px 12px; margin-bottom: 14px; font-size: .9rem; }
     .empty { color: var(--muted); text-align: center; padding: 20px 8px; }
     ul.list { list-style: none; margin: 0; padding: 0; }
     ul.list li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); }
@@ -142,7 +141,6 @@ const I18N = {
     nzSealife: "Neue Riffbewohner",
     roll: "🎲 Zufall",
     empty: "Wähle die Anzahl Personen und eure Erweiterungen und tippe auf „Zufall“.",
-    changed: "Die Einstellungen wurden geändert – tippe auf „Zufall“, um sie zu übernehmen.",
     sealife: "Riffbewohner",
     fishOut: per => `Fische aussortieren: je ${per} pro Farbe.`,
     fishAll: "Fische: alle 96 Fische kommen in den Fischbeutel.",
@@ -166,7 +164,6 @@ const I18N = {
     nzSealife: "New Sealife Tiles",
     roll: "🎲 Random",
     empty: "Choose the number of players and your expansions, then tap “Random”.",
-    changed: "Settings have changed – tap “Random” to apply them.",
     sealife: "Sealife Tiles",
     fishOut: per => `Remove Fish: ${per} of each color.`,
     fishAll: "Fish: all 96 Fish go into the Fish Pouch.",
@@ -311,7 +308,11 @@ let settings = Object.assign({}, DEFAULTS, store.get("riffwelten-settings") || {
 settings = Object.fromEntries(SETTING_KEYS.map(k => [k, settings[k]]));
 let result = store.get("riffwelten-result");
 if (!result || !result.cfg || !Array.isArray(result.sealife)) result = null;
-else result.cfg = Object.fromEntries(SETTING_KEYS.map(k => [k, result.cfg[k] ?? DEFAULTS[k]]));
+else {
+  // Ergebnis gehört immer zu den aktuellen Einstellungen (ältere Versionen konnten abweichen)
+  result.cfg = Object.assign({}, settings);
+  if (settings.nzTurtle && !result.nest) result.nest = rollNest();
+}
 
 // ===== 5. Würfeln =====
 function sealifePool(cfg) {
@@ -352,10 +353,22 @@ function rollSealife(cfg) {
   }
 }
 
-// Schildkröteninsel wird immer mitgewürfelt, aber nur angezeigt, wenn das Modul eingeschaltet ist.
-// So kann das Modul nach dem Würfeln ein- und ausgeschaltet werden, ohne den Rest neu zu würfeln.
 function rollNest() {
   return { y: pick(NEST.y).n, w: pick(NEST.w).n, b: pick(NEST.b).n };
+}
+
+// Einstellungen wirken sofort auf das vorhandene Ergebnis – nur der betroffene Teil wird neu gewürfelt:
+// Personenzahl ändert nur Mengen und Hinweise, Nistzeit-Riffbewohner ändern den Pool (Riffbewohner neu),
+// Schildkröteninsel-Modul an → Insel neu würfeln, aus → Insel ausblenden.
+function settingChanged(key) {
+  store.set("riffwelten-settings", settings);
+  if (result) {
+    result.cfg = Object.assign({}, settings);
+    if (key === "nzSealife") result.sealife = rollSealife(result.cfg);
+    if (key === "nzTurtle" && settings.nzTurtle) result.nest = rollNest();
+    store.set("riffwelten-result", result);
+  }
+  renderSettings(); renderResults();
 }
 
 function rollAll() {
@@ -377,8 +390,6 @@ function renderResults() {
   if (!result) { el.innerHTML = `<div class="card empty">${t("empty")}</div>`; return; }
   const cfg = result.cfg;
   let html = "";
-
-  if (JSON.stringify(cfg) !== JSON.stringify(settings)) html += `<div class="notice">${t("changed")}</div>`;
 
   // Riffbewohner
   const items = result.sealife.slice().sort(sortIds).map(id => SEALIFE.find(s => s.id === id));
@@ -445,19 +456,11 @@ document.querySelectorAll(".seg[data-setting]").forEach(seg => seg.addEventListe
   const b = e.target.closest("button");
   if (!b) return;
   settings[seg.dataset.setting] = Number(b.dataset.value);
-  store.set("riffwelten-settings", settings);
-  renderSettings(); renderResults();
+  settingChanged(seg.dataset.setting);
 }));
 document.querySelectorAll("input[data-setting]").forEach(i => i.addEventListener("change", () => {
   settings[i.dataset.setting] = i.checked;
-  store.set("riffwelten-settings", settings);
-  // Schildkröteninsel-Modul wirkt sofort auf das vorhandene Ergebnis, ohne neu zu würfeln
-  if (i.dataset.setting === "nzTurtle" && result) {
-    result.cfg.nzTurtle = i.checked;
-    if (!result.nest) result.nest = rollNest(); // ältere gespeicherte Ergebnisse ohne Insel
-    store.set("riffwelten-result", result);
-  }
-  renderSettings(); renderResults();
+  settingChanged(i.dataset.setting);
 }));
 document.getElementById("results").addEventListener("click", e => {
   if (e.target.closest("[data-roll]")) rollAll();
