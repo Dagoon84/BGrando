@@ -352,14 +352,15 @@ function rollSealife(cfg) {
   }
 }
 
-function rollNest(cfg) {
-  if (!cfg.nzTurtle) return null;
+// Schildkröteninsel wird immer mitgewürfelt, aber nur angezeigt, wenn das Modul eingeschaltet ist.
+// So kann das Modul nach dem Würfeln ein- und ausgeschaltet werden, ohne den Rest neu zu würfeln.
+function rollNest() {
   return { y: pick(NEST.y).n, w: pick(NEST.w).n, b: pick(NEST.b).n };
 }
 
 function rollAll() {
   const cfg = Object.assign({}, settings);
-  result = { cfg, sealife: rollSealife(cfg), nest: rollNest(cfg) };
+  result = { cfg, sealife: rollSealife(cfg), nest: rollNest() };
   store.set("riffwelten-result", result);
   render();
   document.getElementById("results").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -391,7 +392,7 @@ function renderResults() {
     `</p></section>`;
 
   // Schildkröteninsel
-  if (result.nest) {
+  if (cfg.nzTurtle && result.nest) {
     const p = NEST_PREFIX[lang];
     html += `<section class="card">${head(t("nest"), true)}<ul class="list">` +
       ["y", "w", "b"].map(c => {
@@ -450,6 +451,12 @@ document.querySelectorAll(".seg[data-setting]").forEach(seg => seg.addEventListe
 document.querySelectorAll("input[data-setting]").forEach(i => i.addEventListener("change", () => {
   settings[i.dataset.setting] = i.checked;
   store.set("riffwelten-settings", settings);
+  // Schildkröteninsel-Modul wirkt sofort auf das vorhandene Ergebnis, ohne neu zu würfeln
+  if (i.dataset.setting === "nzTurtle" && result) {
+    result.cfg.nzTurtle = i.checked;
+    if (!result.nest) result.nest = rollNest(); // ältere gespeicherte Ergebnisse ohne Insel
+    store.set("riffwelten-result", result);
+  }
   renderSettings(); renderResults();
 }));
 document.getElementById("results").addEventListener("click", e => {
