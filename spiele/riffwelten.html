@@ -141,10 +141,9 @@ const I18N = {
     nzTurtle: "Schildkröteninsel-Modul",
     nzSealife: "Neue Riffbewohner",
     roll: "🎲 Zufall",
-    reroll: "🎲 Neuer Zufall",
     rerollShort: "↻ Neu",
     empty: "Wähle die Anzahl Personen und eure Erweiterungen und tippe auf „Zufall“.",
-    changed: "Die Einstellungen wurden geändert – tippe auf „Neuer Zufall“, um sie zu übernehmen.",
+    changed: "Die Einstellungen wurden geändert – tippe auf „Zufall“, um sie zu übernehmen.",
     sealife: "Riffbewohner",
     fishOut: per => `Fische aussortieren: je ${per} pro Farbe.`,
     fishAll: "Fische: alle 96 Fische kommen in den Fischbeutel.",
@@ -167,10 +166,9 @@ const I18N = {
     nzTurtle: "Turtle Island Module",
     nzSealife: "New Sealife Tiles",
     roll: "🎲 Random",
-    reroll: "🎲 Random again",
     rerollShort: "↻ New",
     empty: "Choose the number of players and your expansions, then tap “Random”.",
-    changed: "Settings have changed – tap “Random again” to apply them.",
+    changed: "Settings have changed – tap “Random” to apply them.",
     sealife: "Sealife Tiles",
     fishOut: per => `Remove Fish: ${per} of each color.`,
     fishAll: "Fish: all 96 Fish go into the Fish Pouch.",
@@ -441,7 +439,7 @@ function renderTexts() {
   document.title = t("docTitle");
   document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
-  document.getElementById("roll").textContent = result ? t("reroll") : t("roll");
+  document.getElementById("roll").textContent = t("roll");
 }
 
 function render() { renderTexts(); renderSettings(); renderResults(); }
