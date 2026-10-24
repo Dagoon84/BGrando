@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#8a5a2b">
-  <title>Dinosaurus Garden – Randomizer</title>
+  <title>Dino Garden – Randomizer</title>
   <style>
     :root {
       --bg: #f7f3ec; --card: #ffffff; --fg: #24190f; --muted: #6e6152; --border: #e6dccd;
@@ -75,7 +75,7 @@
     </div>
   </header>
 
-  <h1>Dinosaurus Garden</h1>
+  <h1>Dino Garden</h1>
 
   <section class="card">
     <h2 data-i18n="mode">Anzahl Besonderer-Dinosaurier-Karten</h2>
@@ -98,35 +98,35 @@
 // ===== 1. Übersetzungen =====
 const I18N = {
   de: {
-    docTitle: "Dinosaurus Garden – Randomizer",
+    docTitle: "Dino Garden – Randomizer",
     back: "← Übersicht",
     mode: "Anzahl Besonderer-Dinosaurier-Karten",
     standard: "3 · Standard",
     advanced: "6 · Fortgeschritten",
     roll: "🎲 Zufall",
-    ex1: "Erweiterung 1 (5 Dinosaurier)",
-    ex2: "Erweiterung 2 (4 Dinosaurier)",
+    ex1: "Brute Hunters (Erweiterung 1)",
+    ex2: "Gentle Titans (Erweiterung 2)",
     cards: "Besonderer-Dinosaurier-Karten",
-    set_base: "Grundspiel", set_ex1: "Erw. 1", set_ex2: "Erw. 2",
+    set_base: "Grundspiel", set_ex1: "Brute Hunters", set_ex2: "Gentle Titans",
     empty: "Wähle die Anzahl Karten und tippe auf „Zufall“.",
   },
   en: {
-    docTitle: "Dinosaurus Garden – Randomizer",
+    docTitle: "Dino Garden – Randomizer",
     back: "← Overview",
     mode: "Number of Special Dinosaur cards",
     standard: "3 · Standard",
     advanced: "6 · Advanced",
     roll: "🎲 Random",
-    ex1: "Expansion 1 (5 dinosaurs)",
-    ex2: "Expansion 2 (4 dinosaurs)",
+    ex1: "Brute Hunters (Expansion 1)",
+    ex2: "Gentle Titans (Expansion 2)",
     cards: "Special Dinosaur cards",
-    set_base: "Base game", set_ex1: "Exp. 1", set_ex2: "Exp. 2",
+    set_base: "Base game", set_ex1: "Brute Hunters", set_ex2: "Gentle Titans",
     empty: "Choose the number of cards and tap “Random”.",
   },
 };
 
 // ===== 2. Spieldaten =====
-// Besonderer-Dinosaurier-Karten: Grundspiel 7, Erweiterung 1: 5, Erweiterung 2: 4.
+// Besonderer-Dinosaurier-Karten: Grundspiel 7, Brute Hunters (Erw. 1): 5, Gentle Titans (Erw. 2): 4.
 // Standard: 3 Karten, für Erfahrene bis zu 6 (Spielvorbereitung).
 const DINOS = [
   { id: "spinosaurus", set: "base", de: "Spinosaurus", en: "Spinosaurus" },
