@@ -63,6 +63,7 @@
     ul.list li:first-child { border-top: 0; }
     .cat { flex: none; width: 96px; font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
     .name { flex: 1; font-size: 1.15rem; font-weight: 700; min-width: 0; }
+    .promo { font-size: .8rem; font-weight: 400; color: var(--muted); }
     .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; cursor: pointer; }
     .toggle input {
       appearance: none; -webkit-appearance: none; flex: none; width: 52px; height: 32px; border-radius: 999px;
@@ -125,6 +126,7 @@ const I18N = {
     setup: "Aufbau-Hinweise",
     promos: "Promokarten",
     nigiriAll: "Nigiri (alle)",
+    promoTag: "(Promo)",
     cat_nigiri: "Nigiri", cat_roll: "Rolle", cat_app: "Vorspeise", cat_special: "Spezial", cat_dessert: "Dessert",
     dealt: n => `Karten pro Person: ${n}`,
     desserts: (a, b, c) => `Dessertkarten ins Deck: Runde 1: ${a} · Runde 2: ${b} · Runde 3: ${c}`,
@@ -140,6 +142,7 @@ const I18N = {
     setup: "Setup notes",
     promos: "Promo cards",
     nigiriAll: "Nigiri (all)",
+    promoTag: "(Promo)",
     cat_nigiri: "Nigiri", cat_roll: "Roll", cat_app: "Appetizer", cat_special: "Special", cat_dessert: "Dessert",
     dealt: n => `Cards per player: ${n}`,
     desserts: (a, b, c) => `Dessert cards into the deck: Round 1: ${a} · Round 2: ${b} · Round 3: ${c}`,
@@ -250,7 +253,10 @@ function renderResults() {
   const row = (cat, name) => `<li><span class="cat">${t("cat_" + cat)}</span><span class="name">${name}</span></li>`;
   let rows = row("nigiri", t("nigiriAll"));
   for (const cat of Object.keys(PICKS)) {
-    result.menu[cat].forEach(id => { rows += row(cat, CARDS[cat].find(c => c.id === id).name); });
+    result.menu[cat].forEach(id => {
+      const c = CARDS[cat].find(x => x.id === id);
+      rows += row(cat, c.name + (c.promo ? ` <span class="promo">${t("promoTag")}</span>` : ""));
+    });
   }
   const notes = [t("dealt", DEALT[n]), t("desserts", ...DESSERTS(n))];
   if (n >= 6 && result.menu.roll.includes("maki")) notes.push(t("maki68"));
