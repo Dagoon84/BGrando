@@ -51,6 +51,18 @@
     ul.list li:first-child { border-top: 0; }
     .cat { flex: none; width: 96px; font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
     .name { flex: 1; font-size: 1.15rem; font-weight: 700; min-width: 0; }
+    .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; cursor: pointer; }
+    .toggle input {
+      appearance: none; -webkit-appearance: none; flex: none; width: 52px; height: 32px; border-radius: 999px;
+      background: var(--border); position: relative; transition: background .15s; margin: 0;
+    }
+    .toggle input::after {
+      content: ""; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%;
+      background: #fff; transition: transform .15s; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    }
+    .toggle input:checked { background: var(--accent); }
+    .toggle input:checked::after { transform: translateX(20px); }
+    .hint { color: var(--muted); font-size: .875rem; margin: 2px 0 0; }
     .info { margin: 0; padding-left: 20px; }
     .info li { margin: 4px 0; }
   </style>
@@ -81,6 +93,11 @@
     <button class="roll" id="roll" type="button" data-i18n="roll">🎲 Zufall</button>
   </section>
 
+  <section class="card">
+    <label class="toggle"><span data-i18n="promos">Promokarten</span><input type="checkbox" data-setting="promos"></label>
+    <p class="hint">Inari, Sukeroku, Pickled Ginger, Sake</p>
+  </section>
+
   <div id="results" aria-live="polite"></div>
 </main>
 
@@ -94,6 +111,8 @@ const I18N = {
     roll: "🎲 Zufall",
     menu: "Menü",
     setup: "Aufbau-Hinweise",
+    promos: "Promokarten",
+    nigiriAll: "Nigiri (alle)",
     cat_nigiri: "Nigiri", cat_roll: "Rolle", cat_app: "Vorspeise", cat_special: "Spezial", cat_dessert: "Dessert",
     dealt: n => `Karten pro Person: ${n}`,
     desserts: (a, b, c) => `Dessertkarten ins Deck: Runde 1: ${a} · Runde 2: ${b} · Runde 3: ${c}`,
@@ -107,6 +126,8 @@ const I18N = {
     roll: "🎲 Random",
     menu: "Menu",
     setup: "Setup notes",
+    promos: "Promo cards",
+    nigiriAll: "Nigiri (all)",
     cat_nigiri: "Nigiri", cat_roll: "Roll", cat_app: "Appetizer", cat_special: "Special", cat_dessert: "Dessert",
     dealt: n => `Cards per player: ${n}`,
     desserts: (a, b, c) => `Dessert cards into the deck: Round 1: ${a} · Round 2: ${b} · Round 3: ${c}`,
@@ -119,6 +140,7 @@ const I18N = {
 // Menü: Nigiri immer, 1 Rolle, 3 Vorspeisen, 2 Spezialkarten, 1 Dessert.
 // min/max: erlaubte Personenzahl (Spoon & Edamame erst ab 3, Menu & Special Order nur bis 6).
 // Kartennamen englisch, da keine offizielle deutsche Liste vorliegt.
+// promo: die 4 Promo-Minierweiterungen (Inari, Sukeroku als Vorspeise; Pickled Ginger, Sake als Spezial).
 const CARDS = {
   roll: [
     { id: "maki", name: "Maki Rolls" },
@@ -134,6 +156,8 @@ const CARDS = {
     { id: "sashimi", name: "Sashimi" },
     { id: "tempura", name: "Tempura" },
     { id: "tofu", name: "Tofu" },
+    { id: "inari", name: "Inari", promo: true },
+    { id: "sukeroku", name: "Sukeroku", promo: true },
   ],
   special: [
     { id: "chopsticks", name: "Chopsticks" },
@@ -144,6 +168,8 @@ const CARDS = {
     { id: "takeout", name: "Takeout Box" },
     { id: "tea", name: "Tea" },
     { id: "wasabi", name: "Wasabi" },
+    { id: "ginger", name: "Pickled Ginger", promo: true },
+    { id: "sake", name: "Sake", promo: true },
   ],
   dessert: [
     { id: "icecream", name: "Green Tea Ice Cream" },
@@ -186,12 +212,12 @@ function t(key, ...args) {
 }
 
 const saved = store.get("sgp-settings") || {};
-let settings = { players: DEALT[saved.players] ? saved.players : 4 };
+let settings = { players: DEALT[saved.players] ? saved.players : 4, promos: !!saved.promos };
 let result = store.get("sgp-result"); // { players, menu: { roll: [ids], ... } }
 if (!result || !result.menu) result = null;
 
 // ===== 5. Würfeln =====
-const allowed = (c, n) => (c.min ?? 2) <= n && n <= (c.max ?? 8);
+const allowed = (c, n) => (c.min ?? 2) <= n && n <= (c.max ?? 8) && (!c.promo || settings.promos);
 
 function rollAll() {
   const n = settings.players;
@@ -210,7 +236,7 @@ function renderResults() {
   if (!result) { el.innerHTML = `<div class="card empty">${t("empty")}</div>`; return; }
   const n = result.players;
   const row = (cat, name) => `<li><span class="cat">${t("cat_" + cat)}</span><span class="name">${name}</span></li>`;
-  let rows = row("nigiri", "Nigiri");
+  let rows = row("nigiri", t("nigiriAll"));
   for (const cat of Object.keys(PICKS)) {
     result.menu[cat].forEach(id => { rows += row(cat, CARDS[cat].find(c => c.id === id).name); });
   }
@@ -227,6 +253,7 @@ function render() {
   document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
   document.querySelectorAll(".seg[data-setting=players] button").forEach(b =>
     b.setAttribute("aria-pressed", String(Number(b.dataset.value) === settings.players)));
+  document.querySelector("input[data-setting=promos]").checked = settings.promos;
   renderResults();
 }
 
@@ -240,6 +267,10 @@ document.querySelector(".seg[data-setting=players]").addEventListener("click", e
   settings.players = Number(b.dataset.value);
   store.set("sgp-settings", settings);
   render();
+});
+document.querySelector("input[data-setting=promos]").addEventListener("change", e => {
+  settings.promos = e.target.checked;
+  store.set("sgp-settings", settings);
 });
 document.getElementById("roll").addEventListener("click", rollAll);
 
