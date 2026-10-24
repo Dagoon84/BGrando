@@ -40,7 +40,7 @@ Jede Seite muss primär für Smartphones im Hochformat (ab 360 px Breite) gebaut
 - **Lesbare Schrift**: Basis mind. 16 px (verhindert auch Auto-Zoom bei Eingabefeldern in iOS); Systemschrift (`system-ui, sans-serif`).
 - **Hauptaktion gut erreichbar**: der „Würfeln/Neu mischen“-Button liegt im Daumenbereich (unten, ggf. `position: sticky`) und ist groß und eindeutig.
 - **Kein Hover-abhängiges Verhalten** – alles muss per Tap bedienbar sein.
-- **Darstellung Hell / Dunkel / Kontrast**: Auswahl auf der Startseite, gespeichert in `localStorage` unter `theme` (gilt für alle Seiten). Jede Seite setzt per kleinem Script im `<head>` `data-theme` auf `<html>` und definiert die Farben als CSS-Variablen für `:root` (hell), `:root[data-theme="dark"]`, `:root[data-theme="contrast"]` sowie `@media (prefers-color-scheme: dark) { :root:not([data-theme]) … }` (ohne Wahl folgt die Seite dem System).
+- **Darstellung Hell / Dunkel / Kontrast / Regenbogen**: Auswahl auf der Startseite, gespeichert in `localStorage` unter `theme` (gilt für alle Seiten). Jede Seite setzt per kleinem Script im `<head>` `data-theme` auf `<html>` und definiert die Farben als CSS-Variablen für `:root` (hell), `:root[data-theme="dark"]`, `:root[data-theme="contrast"]`, `:root[data-theme="rainbow"]` sowie `@media (prefers-color-scheme: dark) { :root:not([data-theme]) … }` (ohne Wahl folgt die Seite dem System).
 - Ergebnisse groß und übersichtlich darstellen, damit sie über den Tisch hinweg ablesbar sind.
 - Optional: Bildschirm wach halten über die Wake Lock API (`navigator.wakeLock`), mit Fallback, falls nicht unterstützt.
 

@@ -30,6 +30,10 @@
     :root[data-theme="contrast"] { --bg: #000; --card: #000; --fg: #fff; --muted: #e6e6e6; --border: #fff; --accent: #ffe600; --accent-fg: #000; --accent-soft: #333; --hot: #ffe600; --coral: #ffe600; --t-coral: #4d1f14; --t-fish: #102a55; --t-mix: #35215c; }
     :root[data-theme="contrast"] .roll { color: #000; }
     :root[data-theme="contrast"] .toggle input:not(:checked) { background: #666; }
+    :root[data-theme="rainbow"] { --bg: #fff8fc; --card: rgba(255,255,255,.88); --fg: #2b1a33; --muted: #6b5a73; --border: #ecd9ee; --accent: #8a3ffc; --accent-fg: #fff; --accent-soft: #f1e6ff; --hot: #ff4f9a; --coral: #ff4f9a; --t-coral: #ffe0d9; --t-fish: #dbe9ff; --t-mix: #eadfff; --rainbow: linear-gradient(90deg, #ff5f6d, #ffa63d, #ffd93d, #4cd17a, #3fa7ff, #9b5cff); }
+    :root[data-theme="rainbow"] body { background: linear-gradient(160deg, #ffe1e6, #fff1d6, #e2fbe6, #dff0ff, #efe2ff) fixed; }
+    :root[data-theme="rainbow"] .roll,
+    :root[data-theme="rainbow"] [aria-pressed="true"] { background: var(--rainbow); border-color: transparent; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.35); }
     * { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; }
     body {
