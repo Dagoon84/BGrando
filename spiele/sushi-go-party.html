@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#d6455d">
+  <title>Sushi Go Party! – Randomizer</title>
+  <style>
+    :root {
+      --bg: #fbf4f1; --card: #ffffff; --fg: #2a1518; --muted: #75595d; --border: #eedcd8;
+      --accent: #d6455d; --accent-fg: #ffffff; --accent-soft: #fbe1e4; --hot: #e58a1f;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #160e0f; --card: #24171a; --fg: #f5e9ea; --muted: #b39a9d; --border: #3d2a2d;
+        --accent: #ff7088; --accent-fg: #2a0b11; --accent-soft: #42222a; --hot: #ffa64d;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+               max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    }
+    main { max-width: 640px; margin: 0 auto; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    header a { color: var(--accent); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+    .lang { display: flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--card); }
+    .lang button { min-width: 48px; min-height: 44px; border: 0; background: none; color: var(--muted); font: inherit; font-weight: 600; }
+    .lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+    h1 { font-size: 1.75rem; margin: 8px 0 16px; line-height: 1.2; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+    .card h2 { font-size: 1.05rem; margin: 0 0 10px; }
+    .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 5px; }
+    .seg button {
+      min-height: 52px; min-width: 0; padding: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--bg);
+      color: var(--fg); font: inherit; font-size: 1.2rem; font-weight: 700;
+    }
+    .seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+    .roll {
+      display: block; width: 100%; margin: 12px 0 0; min-height: 60px; border: 0; border-radius: 16px;
+      background: var(--hot); color: #fff; font: inherit; font-size: 1.2rem; font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+    .roll:active { transform: scale(.98); }
+    .empty { color: var(--muted); text-align: center; padding: 20px 8px; }
+    ul.list { list-style: none; margin: 0; padding: 0; }
+    ul.list li { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); }
+    ul.list li:first-child { border-top: 0; }
+    .cat { flex: none; width: 96px; font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .name { flex: 1; font-size: 1.15rem; font-weight: 700; min-width: 0; }
+    .info { margin: 0; padding-left: 20px; }
+    .info li { margin: 4px 0; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <a href="../index.html" data-i18n="back">← Übersicht</a>
+    <div class="lang" role="group" aria-label="Sprache / Language">
+      <button type="button" data-lang="de">DE</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <h1>Sushi Go Party!</h1>
+
+  <section class="card">
+    <h2 data-i18n="players">Anzahl Personen</h2>
+    <div class="seg" data-setting="players">
+      <button type="button" data-value="2">2</button>
+      <button type="button" data-value="3">3</button>
+      <button type="button" data-value="4">4</button>
+      <button type="button" data-value="5">5</button>
+      <button type="button" data-value="6">6</button>
+      <button type="button" data-value="7">7</button>
+      <button type="button" data-value="8">8</button>
+    </div>
+    <button class="roll" id="roll" type="button" data-i18n="roll">Menü auswürfeln</button>
+  </section>
+
+  <div id="results" aria-live="polite"></div>
+</main>
+
+<script>
+// ===== 1. Übersetzungen =====
+const I18N = {
+  de: {
+    docTitle: "Sushi Go Party! – Randomizer",
+    back: "← Übersicht",
+    players: "Anzahl Personen",
+    roll: "Menü auswürfeln",
+    menu: "Menü",
+    setup: "Aufbau-Hinweise",
+    cat_nigiri: "Nigiri", cat_roll: "Rolle", cat_app: "Vorspeise", cat_special: "Spezial", cat_dessert: "Dessert",
+    dealt: n => `Karten pro Person: ${n}`,
+    desserts: (a, b, c) => `Dessertkarten ins Deck: Runde 1: ${a} · Runde 2: ${b} · Runde 3: ${c}`,
+    maki68: "Maki-Plättchen mit der Seite für 6–8 Personen nutzen.",
+    empty: "Wähle die Anzahl Personen und tippe auf „Menü auswürfeln“.",
+  },
+  en: {
+    docTitle: "Sushi Go Party! – Randomizer",
+    back: "← Overview",
+    players: "Number of players",
+    roll: "Randomize menu",
+    menu: "Menu",
+    setup: "Setup notes",
+    cat_nigiri: "Nigiri", cat_roll: "Roll", cat_app: "Appetizer", cat_special: "Special", cat_dessert: "Dessert",
+    dealt: n => `Cards per player: ${n}`,
+    desserts: (a, b, c) => `Dessert cards into the deck: Round 1: ${a} · Round 2: ${b} · Round 3: ${c}`,
+    maki68: "Use the 6–8 player side of the Maki Roll tile.",
+    empty: "Choose the number of players and tap “Randomize menu”.",
+  },
+};
+
+// ===== 2. Spieldaten =====
+// Menü: Nigiri immer, 1 Rolle, 3 Vorspeisen, 2 Spezialkarten, 1 Dessert.
+// min/max: erlaubte Personenzahl (Spoon & Edamame erst ab 3, Menu & Special Order nur bis 6).
+// Kartennamen englisch, da keine offizielle deutsche Liste vorliegt.
+const CARDS = {
+  roll: [
+    { id: "maki", name: "Maki Rolls" },
+    { id: "temaki", name: "Temaki" },
+    { id: "uramaki", name: "Uramaki" },
+  ],
+  app: [
+    { id: "dumpling", name: "Dumpling" },
+    { id: "edamame", name: "Edamame", min: 3 },
+    { id: "eel", name: "Eel" },
+    { id: "onigiri", name: "Onigiri" },
+    { id: "miso", name: "Miso Soup" },
+    { id: "sashimi", name: "Sashimi" },
+    { id: "tempura", name: "Tempura" },
+    { id: "tofu", name: "Tofu" },
+  ],
+  special: [
+    { id: "chopsticks", name: "Chopsticks" },
+    { id: "menu", name: "Menu", max: 6 },
+    { id: "soy", name: "Soy Sauce" },
+    { id: "spoon", name: "Spoon", min: 3 },
+    { id: "order", name: "Special Order", max: 6 },
+    { id: "takeout", name: "Takeout Box" },
+    { id: "tea", name: "Tea" },
+    { id: "wasabi", name: "Wasabi" },
+  ],
+  dessert: [
+    { id: "icecream", name: "Green Tea Ice Cream" },
+    { id: "fruit", name: "Fruit" },
+    { id: "pudding", name: "Pudding" },
+  ],
+};
+const PICKS = { roll: 1, app: 3, special: 2, dessert: 1 };
+const DEALT = { 2: 10, 3: 10, 4: 9, 5: 9, 6: 8, 7: 8, 8: 7 };
+const DESSERTS = n => n <= 5 ? [5, 3, 2] : [7, 5, 3];
+
+// ===== 3. Zufall =====
+function randInt(n) {
+  const max = Math.floor(0x100000000 / n) * n;
+  const buf = new Uint32Array(1);
+  do { crypto.getRandomValues(buf); } while (buf[0] >= max);
+  return buf[0] % n;
+}
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = randInt(i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ===== 4. Sprache & Einstellungen =====
+const store = {
+  get(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
+  set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} },
+};
+let lang = store.get("lang");
+if (lang !== "de" && lang !== "en") lang = (navigator.language || "de").toLowerCase().startsWith("de") ? "de" : "en";
+
+function t(key, ...args) {
+  let v = I18N[lang][key];
+  if (v === undefined) { console.warn("i18n: fehlender Schlüssel", lang, key); v = I18N.de[key]; }
+  return typeof v === "function" ? v(...args) : (v ?? key);
+}
+
+const saved = store.get("sgp-settings") || {};
+let settings = { players: DEALT[saved.players] ? saved.players : 4 };
+let result = store.get("sgp-result"); // { players, menu: { roll: [ids], ... } }
+if (!result || !result.menu) result = null;
+
+// ===== 5. Würfeln =====
+const allowed = (c, n) => (c.min ?? 2) <= n && n <= (c.max ?? 8);
+
+function rollAll() {
+  const n = settings.players;
+  const menu = {};
+  for (const [cat, count] of Object.entries(PICKS)) {
+    menu[cat] = shuffle(CARDS[cat].filter(c => allowed(c, n))).slice(0, count).map(c => c.id);
+  }
+  result = { players: n, menu };
+  store.set("sgp-result", result);
+  renderResults();
+}
+
+// ===== 6. Rendern =====
+function renderResults() {
+  const el = document.getElementById("results");
+  if (!result) { el.innerHTML = `<div class="card empty">${t("empty")}</div>`; return; }
+  const n = result.players;
+  const row = (cat, name) => `<li><span class="cat">${t("cat_" + cat)}</span><span class="name">${name}</span></li>`;
+  let rows = row("nigiri", "Nigiri");
+  for (const cat of Object.keys(PICKS)) {
+    result.menu[cat].forEach(id => { rows += row(cat, CARDS[cat].find(c => c.id === id).name); });
+  }
+  const notes = [t("dealt", DEALT[n]), t("desserts", ...DESSERTS(n))];
+  if (n >= 6 && result.menu.roll.includes("maki")) notes.push(t("maki68"));
+  el.innerHTML = `<section class="card"><h2>${t("menu")}</h2><ul class="list">${rows}</ul></section>` +
+    `<section class="card"><h2>${t("setup")}</h2><ul class="info">${notes.map(x => `<li>${x}</li>`).join("")}</ul></section>`;
+}
+
+function render() {
+  document.documentElement.lang = lang;
+  document.title = t("docTitle");
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+  document.querySelectorAll(".seg[data-setting=players] button").forEach(b =>
+    b.setAttribute("aria-pressed", String(Number(b.dataset.value) === settings.players)));
+  renderResults();
+}
+
+// ===== 7. Events =====
+document.querySelectorAll(".lang button").forEach(b => b.addEventListener("click", () => {
+  lang = b.dataset.lang; store.set("lang", lang); render();
+}));
+document.querySelector(".seg[data-setting=players]").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  settings.players = Number(b.dataset.value);
+  store.set("sgp-settings", settings);
+  render();
+});
+document.getElementById("roll").addEventListener("click", rollAll);
+
+render();
+</script>
+</body>
+</html>

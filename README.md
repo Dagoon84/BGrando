@@ -6,6 +6,8 @@ Kleine, handyoptimierte Zufallshelfer für den Spielaufbau von Brettspielen (Deu
 
 - **Riffwelten / Shallow Sea** – Riffbewohner nach der Aufbauhilfe, Nistzeit (neue Riffbewohner, Schildkröteninsel) und Aufbau-Hinweise.
 - **Life of the Amazonia** – Standard-Tierkarten pro Tier aus Set A–D (optional F) und Tierfiguren pro Karte.
+- **Dinosaurus Garden** – Besonderer-Dinosaurier-Karten (3 oder 6), optional mit Erweiterung 1 und 2.
+- **Sushi Go Party!** – Zufälliges Menü nach Personenzahl.
 - **SETI** – Link zur Sonnensystem-App von Czech Games.
 
 Gehostet über GitHub Pages: https://dagoon84.github.io/BGrando/
