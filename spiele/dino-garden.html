@@ -5,17 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#8a5a2b">
   <title>Dino Garden – Randomizer</title>
+  <script>try { const th = JSON.parse(localStorage.getItem("theme")); if (th) document.documentElement.dataset.theme = th; } catch {}</script>
   <style>
     :root {
       --bg: #f7f3ec; --card: #ffffff; --fg: #24190f; --muted: #6e6152; --border: #e6dccd;
       --accent: #8a5a2b; --accent-fg: #ffffff; --accent-soft: #f1e4d3; --hot: #2e8b57;
     }
     @media (prefers-color-scheme: dark) {
-      :root {
+      :root:not([data-theme]) {
         --bg: #15110c; --card: #211a13; --fg: #f1e9de; --muted: #ab9c89; --border: #3a2e22;
         --accent: #d79b5c; --accent-fg: #1d1208; --accent-soft: #3a2a1a; --hot: #5cc28a;
       }
     }
+    :root[data-theme="dark"] {
+        --bg: #15110c; --card: #211a13; --fg: #f1e9de; --muted: #ab9c89; --border: #3a2e22;
+        --accent: #d79b5c; --accent-fg: #1d1208; --accent-soft: #3a2a1a; --hot: #5cc28a;
+      }
+    :root[data-theme="contrast"] { --bg: #000; --card: #000; --fg: #fff; --muted: #e6e6e6; --border: #fff; --accent: #ffe600; --accent-fg: #000; --accent-soft: #333; --hot: #ffe600; --coral: #ffe600; --t-coral: #4d1f14; --t-fish: #102a55; --t-mix: #35215c; }
+    :root[data-theme="contrast"] .roll { color: #000; }
+    :root[data-theme="contrast"] .toggle input:not(:checked) { background: #666; }
     * { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; }
     body {

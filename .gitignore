@@ -1,2 +1,5 @@
 # Spielregeln (urheberrechtlich geschützt) nur lokal als Referenz, nicht veröffentlichen
 *.pdf
+
+# lokale Claude-Einstellungen
+.claude/

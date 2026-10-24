@@ -5,17 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#d6455d">
   <title>Sushi Go Party! – Randomizer</title>
+  <script>try { const th = JSON.parse(localStorage.getItem("theme")); if (th) document.documentElement.dataset.theme = th; } catch {}</script>
   <style>
     :root {
       --bg: #fbf4f1; --card: #ffffff; --fg: #2a1518; --muted: #75595d; --border: #eedcd8;
       --accent: #d6455d; --accent-fg: #ffffff; --accent-soft: #fbe1e4; --hot: #e58a1f;
     }
     @media (prefers-color-scheme: dark) {
-      :root {
+      :root:not([data-theme]) {
         --bg: #160e0f; --card: #24171a; --fg: #f5e9ea; --muted: #b39a9d; --border: #3d2a2d;
         --accent: #ff7088; --accent-fg: #2a0b11; --accent-soft: #42222a; --hot: #ffa64d;
       }
     }
+    :root[data-theme="dark"] {
+        --bg: #160e0f; --card: #24171a; --fg: #f5e9ea; --muted: #b39a9d; --border: #3d2a2d;
+        --accent: #ff7088; --accent-fg: #2a0b11; --accent-soft: #42222a; --hot: #ffa64d;
+      }
+    :root[data-theme="contrast"] { --bg: #000; --card: #000; --fg: #fff; --muted: #e6e6e6; --border: #fff; --accent: #ffe600; --accent-fg: #000; --accent-soft: #333; --hot: #ffe600; --coral: #ffe600; --t-coral: #4d1f14; --t-fish: #102a55; --t-mix: #35215c; }
+    :root[data-theme="contrast"] .roll { color: #000; }
+    :root[data-theme="contrast"] .toggle input:not(:checked) { background: #666; }
     * { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; }
     body {
